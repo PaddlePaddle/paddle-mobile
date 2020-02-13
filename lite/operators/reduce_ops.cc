@@ -29,7 +29,7 @@ bool ReduceOp::CheckShape() const {
 }
 
 bool ReduceOp::InferShape() const {
-  const auto &x_dims = param_.x->dims();
+  const auto& x_dims = param_.x->dims();
   auto x_rank = x_dims.size();
   auto dims = param_.dim;
   for (size_t i = 0; i < dims.size(); ++i) {
@@ -74,7 +74,7 @@ bool ReduceOp::InferShape() const {
   return true;
 }
 
-bool ReduceOp::AttachImpl(const cpp::OpDesc &opdesc, lite::Scope *scope) {
+bool ReduceOp::AttachImpl(const cpp::OpDesc& opdesc, lite::Scope* scope) {
   param_.x =
       scope->FindVar(opdesc.Input("X").front())->GetMutable<lite::Tensor>();
   param_.output =

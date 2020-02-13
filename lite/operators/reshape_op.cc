@@ -136,7 +136,6 @@ std::vector<DDim::value_type> ValidateShape(const std::vector<int> &shape,
   const int unk_dim_val = -1;
   const int copy_dim_val = 0;
 
-  std::vector<DDim::value_type> output_dims(shape.size());
   DDim::value_type capacity = 1;
   int unk_dim_idx = -1;
   for (size_t i = 0; i < shape.size(); ++i) {
@@ -163,7 +162,7 @@ std::vector<DDim::value_type> ValidateShape(const std::vector<int> &shape,
     if (CheckPositive(input_dims)) {
       // input_size < 0 and is un-determinate in compile time, skip the check,
       // for example, input_dims = [-1, 8, 1, 1], shape = [-1, 3, 8],
-      // capacity = -24, input_size = -8, output_shape[0] = 0
+      // capacity = -24, input_size = -8, output_dims[0] = 0
       // the following check will fail.
       output_dims[unk_dim_idx] = -input_size / capacity;
       CHECK_EQ(output_dims[unk_dim_idx] * capacity, -input_size)
