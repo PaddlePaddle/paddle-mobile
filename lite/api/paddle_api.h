@@ -136,6 +136,12 @@ class LITE_API CxxConfig : public ConfigBase {
 #ifdef LITE_WITH_X86
   int x86_math_library_math_threads_ = 1;
 #endif
+  lite_api::MLUCoreVersion mlu_core_version_{lite_api::MLUCoreVersion::MLU_270};
+  int mlu_core_number_{1};
+  DataLayoutType mlu_input_layout_{DATALAYOUT(kNCHW)};
+  bool mlu_use_first_conv_{false};
+  std::vector<float> mlu_first_conv_mean_;
+  std::vector<float> mlu_first_conv_std_;
 
  public:
   void set_valid_places(const std::vector<Place>& x) { valid_places_ = x; }
@@ -163,6 +169,20 @@ class LITE_API CxxConfig : public ConfigBase {
     return x86_math_library_math_threads_;
   }
 #endif
+
+  void set_mlu_core_version(lite_api::MLUCoreVersion core_version);
+  void set_mlu_core_number(int core_number);
+  void set_mlu_input_layout(DataLayoutType layout);
+  void set_mlu_use_first_conv(bool use_first_conv);
+  void set_mlu_first_conv_mean(const std::vector<float>& mean);
+  void set_mlu_first_conv_std(const std::vector<float>& std);
+
+  lite_api::MLUCoreVersion mlu_core_version() const;
+  int mlu_core_number() const;
+  DataLayoutType mlu_input_layout() const;
+  bool mlu_use_first_conv() const;
+  std::vector<float> mlu_first_conv_mean() const;
+  std::vector<float> mlu_first_conv_std() const;
 };
 
 /// MobileConfig is the config for the light weight predictor, it will skip

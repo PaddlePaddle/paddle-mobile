@@ -314,8 +314,14 @@ void SubgraphDetector::InitNodes(node_map_t *nodes) {
 
 std::vector<std::vector<Node *>> SubgraphDetector::ExtractSubgraphs(
     node_map_t *nodes) {
-  for (auto &it : *nodes) {
-    node_dat_t *node = it.second;
+  for (auto &n_tpo : graph_->NodeTopologicalOrder()) {
+    // different orders when traversing nodes in graph may lead to
+    // different subgraph division, which may generate different result
+    // with device such as MLU. These different results are all "right"
+    // but a little confusing. Thus the topological order is used instead
+    // of the address of the node in graph.
+    CHECK(nodes->find(n_tpo) != nodes->end());
+    node_dat_t *node = (*nodes)[n_tpo];
     if (!node->marked) {
       continue;
     }
@@ -444,6 +450,9 @@ void SubgraphFuser::InsertNewNode(SSAGraph *graph,
   for (auto &var_node : output_var_nodes) {
     output_var_names.push_back(var_node->AsArg().name);
   }
+  for (auto &var_node : local_var_nodes) {
+    output_var_names.push_back(var_node->AsArg().name);
+  }
   subgraph_op_desc.SetAttr<std::vector<std::string>>("input_data_names",
                                                      input_var_names);
   subgraph_op_desc.SetAttr<std::vector<std::string>>("output_data_names",
@@ -484,9 +493,6 @@ void SubgraphFuser::InsertNewNode(SSAGraph *graph,
   // To prevent vars are removed in RuntimeProgram::UpdateVarsOfProgram()
   for (auto &var_node : weight_var_nodes) {
     input_var_names.push_back(var_node->AsArg().name);
-  }
-  for (auto &var_node : local_var_nodes) {
-    output_var_names.push_back(var_node->AsArg().name);
   }
   for (auto &var_node : unused_var_nodes) {
     output_var_names.push_back(var_node->AsArg().name);
