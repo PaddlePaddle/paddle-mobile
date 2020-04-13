@@ -68,6 +68,7 @@ if (WITH_TESTING)
       X86_DEPS ${x86_kernels}
       XPU_DEPS ${xpu_kernels}
       BM_DEPS ${bm_kernels}
+      HW_ASCENND_NPU_DEPS ${hw_ascend_npu_kernels}
       MLU_DEPS ${mlu_kernels})
 endif()
 if(LITE_WITH_FPGA)
@@ -90,6 +91,7 @@ message(STATUS "get NPU kernels ${npu_kernels}")
 message(STATUS "get XPU kernels ${xpu_kernels}")
 message(STATUS "get FPGA kernels ${fpga_kernels}")
 message(STATUS "get BM kernels ${bm_kernels}")
+message(STATUS "get HW_ASCEND_NPU kernels ${hw_ascend_npu_kernels}")
 message(STATUS "get MLU kernels ${mlu_kernels}")
 
 # for full api
@@ -107,7 +109,8 @@ if (NOT LITE_ON_TINY_PUBLISH)
                         XPU_DEPS ${xpu_kernels}
                         BM_DEPS ${bm_kernels}
                         CL_DEPS ${opencl_kernels}
-                        FPGA_DEPS ${fpga_kernels})
+                        FPGA_DEPS ${fpga_kernels}
+                        HW_ASCEND_NPU_DEPS ${hw_ascend_npu_kernels})
 endif()
 
 # for light api
@@ -129,6 +132,7 @@ lite_cc_library(light_api SRCS light_api.cc
         CL_DEPS ${opencl_kernels}
         FPGA_DEPS ${fpga_kernels}
         BM_DEPS ${bm_kernels}
+        HW_ASCEND_NPU_DEPS ${hw_ascend_npu_kernels}
         MLU_DEPS ${mlu_kernels})
 
 include(ExternalProject)
@@ -148,6 +152,7 @@ if(WITH_TESTING)
        CL_DEPS ${opencl_kernels}
        FPGA_DEPS ${fpga_kernels}
        BM_DEPS ${bm_kernels}
+       HW_ASCEND_NPU_DEPS ${hw_ascend_npu_kernels}
        MLU_DEPS ${mlu_kernels}
        EXCLUDE_COMPILE_DEPS "ON"
        ARGS --model_dir=${LITE_MODEL_DIR}/lite_naive_model
@@ -337,6 +342,7 @@ lite_cc_test(test_paddle_api SRCS paddle_api_test.cc DEPS paddle_api_full paddle
   X86_DEPS ${x86_kernels}
   FPGA_DEPS ${fpga_kernels}
   BM_DEPS ${bm_kernels}
+  HW_ASCEND_NPU_DEPS ${hw_ascend_npu_kernels}
   MLU_DEPS ${mlu_kernels}
   ARGS --model_dir=${LITE_MODEL_DIR}/lite_naive_model SERIAL)
 if (WITH_TESTING)
@@ -357,7 +363,7 @@ if(NOT IOS)
         FPGA_DEPS ${fpga_kernels}
         X86_DEPS ${x86_kernels}
         CUDA_DEPS ${cuda_kernels})
-    
+
     lite_cc_binary(test_model_detection_bin SRCS model_test_detection.cc DEPS paddle_api_full paddle_api_light gflags utils
         ${ops} ${host_kernels}
         ARM_DEPS ${arm_kernels}
@@ -370,7 +376,7 @@ if(NOT IOS)
         FPGA_DEPS ${fpga_kernels}
         X86_DEPS ${x86_kernels}
         CUDA_DEPS ${cuda_kernels})
-    
+
     lite_cc_binary(test_model_classify_bin SRCS model_test_classify.cc DEPS paddle_api_full paddle_api_light gflags utils
         ${ops} ${host_kernels}
         ARM_DEPS ${arm_kernels}
@@ -395,7 +401,7 @@ if(NOT IOS)
         FPGA_DEPS ${fpga_kernels}
         X86_DEPS ${x86_kernels}
         CUDA_DEPS ${cuda_kernels})
-    
+
     lite_cc_binary(multithread_test SRCS lite_multithread_test.cc DEPS paddle_api_full paddle_api_light gflags utils
         ${ops} ${host_kernels}
         ARM_DEPS ${arm_kernels}

@@ -61,6 +61,7 @@ lite_option(LITE_WITH_ARM  "Enable ARM in lite mode"  OFF)
 lite_option(LITE_WITH_NPU  "Enable NPU in lite mode"  OFF)
 lite_option(LITE_WITH_MLU  "Enable MLU in lite mode"  OFF)
 lite_option(LITE_WITH_XPU  "Enable XPU in lite mode"  OFF)
+lite_option(LITE_WITH_HW_ASCEND_NPU "Enable Huawei Ascend NPU in lite mode" OFF)
 lite_option(LITE_WITH_XTCL  "Enable XPU via XTCL"  OFF IF LITE_WITH_XPU)
 lite_option(LITE_WITH_BM   "Enable BM in lite mode"   OFF)
 lite_option(LITE_WITH_TRAIN "Enable training operators and kernels in lite" OFF)
@@ -177,6 +178,10 @@ endif()
 
 if(LITE_WITH_XPU)
     include(device/xpu)
+endif()
+
+if (LITE_WITH_HW_ASCEND_NPU)
+    include(device/hw_ascend_npu)
 endif()
 
 if(LITE_WITH_MLU)

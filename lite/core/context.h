@@ -60,6 +60,7 @@ using XPUContext = Context<TargetType::kXPU>;
 using OpenCLContext = Context<TargetType::kOpenCL>;
 using FPGAContext = Context<TargetType::kFPGA>;
 using BMContext = Context<TargetType::kBM>;
+using HWAscendNPUContext = Context<TargetType::kHWAscendNPU>;
 using MLUContext = Context<TargetType::kMLU>;
 
 template <>
@@ -72,6 +73,21 @@ class Context<TargetType::kHost> {
 
   std::string name() const { return "HostContext"; }
 };
+
+#ifdef LITE_WITH_HW_ASCEND_NPU
+template <>
+class Context<TargetType::kHWAscendNPU> {
+ public:
+  Context() {}
+  explicit Context(const HWAscendNPUContext& ctx);
+  // NOTE: InitOnce should only be used by ContextScheduler
+  void InitOnce() {}
+  void CopySharedTo(HWAscendNPUContext* ctx) {}
+
+  HWAscendNPUContext& operator=(const HWAscendNPUContext& ctx) { return *this; }
+  std::string name() const { return "AscendContext"; }
+};
+#endif
 
 #ifdef LITE_WITH_NPU
 template <>
@@ -513,6 +529,12 @@ class ContextScheduler {
             &ctx->As<BMContext>());
         break;
 #endif
+#ifdef LITE_WITH_HW_ASCEND_NPU
+      case TARGET(kHWAscendNPU):
+        kernel_contexts_[TargetType::kHWAscendNPU]
+            .As<HWAscendNPUContext>()
+            .CopySharedTo(&ctx->As<HWAscendNPUContext>());
+        break;
 #ifdef LITE_WITH_MLU
       case TARGET(kMLU): {
         int dev_id = TargetWrapper<TargetType::kMLU>::GetCurDevice();
@@ -557,6 +579,9 @@ class ContextScheduler {
 #endif
 #ifdef LITE_WITH_NPU
     InitContext<TargetType::kNPU, NPUContext>();
+#endif
+#ifdef LITE_WITH_HW_ASCEND_NPU
+    InitContext<TargetType::kHWAscendNPU, HWAscendNPUContext>();
 #endif
 #ifdef LITE_WITH_XPU
     InitContext<TargetType::kXPU, XPUContext>();
