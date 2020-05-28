@@ -14,6 +14,7 @@
 
 #include "lite/core/op_registry.h"
 #include <list>
+#include <memory>
 #include <set>
 
 namespace paddle {
@@ -281,7 +282,7 @@ KernelRegistry::KernelRegistry() : registries_() {
 }
 
 KernelRegistry &KernelRegistry::Global() {
-  static auto *x = new KernelRegistry;
+  static auto x = std::unique_ptr<KernelRegistry>(new KernelRegistry);
   return *x;
 }
 
