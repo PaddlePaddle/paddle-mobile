@@ -25,11 +25,68 @@ namespace kernels {
 namespace x86 {
 
 struct SumFunctor {
+  template <typename X, typename Y, typename XDim, typename Dim>
+  void operator()(X* x, Y* y, const XDim& x_dim, const Dim& dims) {
+    if (dims[0] == 0) {
+      size_t h_size = x_dim[2];
+      size_t w_size = x_dim[1] * x_dim[2];
+      for (int i = 0; i < x_dim[1]; i++) {
+        for (int k = 0; k < x_dim[2]; k++) {
+          auto input_size = i * h_size + k;
+          auto output_temp = x[input_size];
+          for (int j = 1; j < x_dim[0]; j++) {
+            int input_d = input_size + j * w_size;
+            output_temp = output_temp + x[input_d];
+          }
+          y[i * h_size + k] = output_temp;
+        }
+      }
+    } else if (dims[0] == 1) {
+      size_t h_size = x_dim[1] * x_dim[2];
+      size_t w_size = x_dim[2];
+      for (int i = 0; i < x_dim[0]; i++) {
+        for (int k = 0; k < x_dim[2]; k++) {
+          auto input_size = i * h_size + k;
+          auto output_temp = x[input_size];
+          for (int j = 1; j < x_dim[1]; j++) {
+            int input_d = input_size + j * w_size;
+            output_temp = output_temp + x[input_d];
+          }
+          y[i * w_size + k] = output_temp;
+        }
+      }
+    } else {
+      size_t h_size = x_dim[1] * x_dim[2];
+      size_t w_size = x_dim[2];
+      for (int i = 0; i < x_dim[0]; i++) {
+        for (int k = 0; k < x_dim[1]; k++) {
+          auto input_size = i * h_size + k * w_size;
+          auto output_temp = x[input_size];
+          for (int j = 1; j < x_dim[2]; j++) {
+            int input_d = input_size + j;
+            output_temp = output_temp + x[input_d];
+          }
+          y[i * x_dim[1] + k] = output_temp;
+        }
+      }
+    }
+  }
+
   template <typename X, typename Y, typename Dim>
   void operator()(X* x, Y* y, const Dim& dim) {
     y->device(lite::fluid::EigenDeviceType<TARGET(kX86)>()) = x->sum(dim);
   }
 };
+
+#define HANDLE_DIMT(NDIM, RDIM)                                             \
+  if (ndim == NDIM && rdim == RDIM) {                                       \
+    paddle::lite::kernels::x86::ReduceFunctorTensor<lite::TargetType::kX86, \
+                                                    T,                      \
+                                                    NDIM,                   \
+                                                    RDIM,                   \
+                                                    SumFunctor>(            \
+        *input, output, dims, keep_dim);                                    \
+  }
 
 #define HANDLE_DIM(NDIM, RDIM)                                            \
   if (ndim == NDIM && rdim == RDIM) {                                     \
@@ -68,7 +125,7 @@ class ReduceSumCompute : public KernelLite<TARGET(kX86), PRECISION(kFloat)> {
       HANDLE_DIM(4, 2);
       HANDLE_DIM(4, 1);
       HANDLE_DIM(3, 2);
-      HANDLE_DIM(3, 1);
+      HANDLE_DIMT(3, 1);
       HANDLE_DIM(2, 1);
       HANDLE_DIM(1, 1);
     }

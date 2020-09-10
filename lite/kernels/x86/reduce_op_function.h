@@ -80,6 +80,21 @@ void ReduceFunctor(const lite::Tensor& input,
   }
 }
 
+template <lite::TargetType Target,
+          typename T,
+          size_t D,
+          size_t R_D,
+          typename Functor>
+void ReduceFunctorTensor(const lite::Tensor& input,
+                         lite::Tensor* output,
+                         const std::vector<int>& dims,
+                         bool keep_dim) {
+  Functor functor;
+  const T* input_data = input.data<T>();
+  T* output_data = output->mutable_data<T>();
+  functor(input_data, output_data, input.dims(), dims);
+}
+
 }  // namespace x86
 }  // namespace kernels
 }  // namespace lite
