@@ -27,6 +27,10 @@
 namespace paddle {
 namespace lite {
 
+// kMaxStream is determined by multi-stream performance testing, may change with
+// default multi-stream algorithm changes.
+constexpr int kMaxStream = 6;
+
 #if ((defined LITE_WITH_ARM) || (defined LITE_WITH_MLU))
 
 typedef enum {
@@ -137,7 +141,7 @@ class Env {
     static Devs* devs = new Devs();
     return *devs;
   }
-  static void Init(int max_stream = 6) {
+  static void Init(int max_stream = lite::kMaxStream) {
 #ifdef LITE_WITH_MLU
     CNRT_CALL(cnrtInit(0));
 #endif
@@ -283,6 +287,7 @@ class Device<TARGET(kCUDA)> {
   bool has_hmma_;
   bool has_imma_;
   int runtime_version_;
+  // Currently used in exec multi-stream.
   std::vector<cudaStream_t> exec_stream_;
   std::vector<cudaStream_t> io_stream_;
 };

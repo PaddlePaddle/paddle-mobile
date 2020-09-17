@@ -42,34 +42,40 @@ class TargetWrapper<TARGET(kCUDA)> {
     return major * 10 + minor;
   }
 
-  static size_t GetCurDevice() {
+  static int GetCurDevice() {
     int dev_id;
-    cudaGetDevice(&dev_id);
+    CUDA_CALL(cudaGetDevice(&dev_id));
     return dev_id;
   }
-  static void CreateStream(stream_t* stream) {}
-  static void DestroyStream(const stream_t& stream) {}
+  static void CreateStream(stream_t* stream) {
+    CUDA_CALL(cudaStreamCreate(stream));
+  }
+  static void DestroyStream(const stream_t& stream) {
+    CUDA_CALL(cudaStreamDestroy(stream));
+  }
 
-  static void CreateEvent(event_t* event) { cudaEventCreate(event); }
+  static void CreateEvent(event_t* event) { CUDA_CALL(cudaEventCreate(event)); }
   static void CreateEventWithFlags(
       event_t* event, unsigned int flags = cudaEventDisableTiming) {
-    cudaEventCreateWithFlags(event, flags);
+    CUDA_CALL(cudaEventCreateWithFlags(event, flags));
   }
-  static void DestroyEvent(const event_t& event) { cudaEventDestroy(event); }
+  static void DestroyEvent(const event_t& event) {
+    CUDA_CALL(cudaEventDestroy(event));
+  }
 
   static void RecordEvent(const event_t& event) {}
   static void RecordEvent(const event_t& event, const stream_t& stream) {
-    cudaEventRecord(event, stream);
+    CUDA_CALL(cudaEventRecord(event, stream));
   }
   static void SyncEvent(const event_t& event) {}
 
   static void StreamSync(const stream_t& stream) {
-    cudaStreamSynchronize(stream);
+    CUDA_CALL(cudaStreamSynchronize(stream));
   }
   static void StreamSync(const stream_t& stream, const event_t& event) {
-    cudaStreamWaitEvent(stream, event, 0);
+    CUDA_CALL(cudaStreamWaitEvent(stream, event, 0));
   }
-  static void DeviceSync() { cudaDeviceSynchronize(); }
+  static void DeviceSync() { CUDA_CALL(cudaDeviceSynchronize()); }
 
   static void* Malloc(size_t size);
   static void Free(void* ptr);

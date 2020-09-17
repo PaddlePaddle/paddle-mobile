@@ -256,6 +256,14 @@ RuntimeProgram::RuntimeProgram(
   Init();
 }
 
+#ifdef LITE_WITH_CUDA
+void RuntimeProgram::UpdateCudaStream(cudaStream_t* exec, cudaStream_t* io) {
+  for (auto& inst : instructions_[kRootBlockIdx]) {
+    inst.UpdateCudaStream(exec, io);
+  }
+}
+#endif
+
 void RuntimeProgram::Run() {
 #ifdef LITE_WITH_PRECISION_PROFILE
   auto inst_precision_profiler = paddle::lite::profile::PrecisionProfiler();
