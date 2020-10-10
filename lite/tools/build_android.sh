@@ -32,6 +32,8 @@ MEDIATEK_APU_SDK_ROOT="$(pwd)/apu_ddk" # Download APU SDK from https://paddlelit
 WITH_OPENCL=OFF
 # options of adding training ops
 WITH_TRAIN=OFF
+# options of time profile
+WITH_PROFILE=OFF
 # num of threads used during compiling..
 readonly NUM_PROC=${LITE_BUILD_THREADS:-4}
 #####################################################################################################
@@ -146,10 +148,14 @@ function make_tiny_publish_so {
       prepare_opencl_source_code $workspace $build_dir
   fi
 
+  # 3rd party is needed when profile option is ON
+  if [ "${WITH_PROFILE}" == "ON" ]; then
+      prepare_thirdparty
+  fi
+
   if [ "${WITH_STRIP}" == "ON" ]; then
       WITH_EXTRA=ON
   fi
-
 
   local cmake_mutable_options="
       -DLITE_BUILD_EXTRA=$WITH_EXTRA \
@@ -159,6 +165,7 @@ function make_tiny_publish_so {
       -DLITE_OPTMODEL_DIR=$OPTMODEL_DIR \
       -DLITE_WITH_JAVA=$WITH_JAVA \
       -DLITE_WITH_CV=$WITH_CV \
+      -DLITE_WITH_PROFILE=$WITH_PROFILE \
       -DLITE_WITH_NPU=$WITH_HUAWEI_KIRIN_NPU \
       -DNPU_DDK_ROOT=$HUAWEI_KIRIN_NPU_SDK_ROOT \
       -DLITE_WITH_APU=$WITH_MEDIATEK_APU \
@@ -335,6 +342,11 @@ function main {
             # ON or OFF, default OFF
             --with_strip=*)
                 WITH_STRIP="${i#*=}"
+                shift
+                ;;
+            # ON or OFF, default OFF
+            --with_profile=*)
+                WITH_PROFILE="${i#*=}"
                 shift
                 ;;
             # string, absolute path to optimized model dir
