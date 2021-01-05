@@ -23,6 +23,9 @@
 #ifdef LITE_WITH_PRECISION_PROFILE
 #include "lite/core/profile/precision_profiler.h"
 #endif
+#ifdef LITE_WITH_XPU
+#include <fcntl.h>
+#endif
 
 namespace paddle {
 namespace lite {
@@ -291,7 +294,16 @@ void RuntimeProgram::Run() {
       inst.Sync();
     }
 #endif
+#ifdef LITE_WITH_XPU
+    auto need_lock_l3 = std::getenv("XPU_L3_LOCK_REQUIRED");
+    int lock_fd = -1;
+    if (need_lock_l3) lock_fd = Context<TargetType::kXPU>::LockXPU();
+#endif
     inst.Run();
+#ifdef LITE_WITH_XPU
+    if (need_lock_l3 && lock_fd >= 0)
+      Context<TargetType::kXPU>::ReleaseXPU(lock_fd);
+#endif
 #ifdef LITE_WITH_PRECISION_PROFILE
 #ifndef LITE_WITH_FPGA
     precision_profiler_summary +=
