@@ -277,6 +277,8 @@ void RuntimeProgram::Run() {
 
   int idx = -1;
   auto& insts = instructions_[kRootBlockIdx];
+
+  LOG(INFO) << "Run program:";
   for (auto& inst : insts) {
     ++idx;
 #ifndef LITE_WITH_FPGA
@@ -294,9 +296,8 @@ void RuntimeProgram::Run() {
       inst.Sync();
     }
 #endif
-
+    LOG(INFO) << " Run op" <<  inst.kernel()->op_type();
     inst.Run();
-
 #ifdef LITE_WITH_PRECISION_PROFILE
 #ifndef LITE_WITH_FPGA
     if (inst.op()->Type() != "while") {
@@ -306,6 +307,7 @@ void RuntimeProgram::Run() {
 #endif
 #endif  // LITE_WITH_PRECISION_PROFILE
   }
+  LOG(INFO) << "Run program done";
 #ifdef LITE_WITH_PROFILE
   LOG(INFO) << "\n" << profiler_.Summary(profile::Type::kDispatch, false, 1);
 #endif
