@@ -1909,6 +1909,28 @@ struct XPUMultiEncoderParam : ParamBase {
   bool norm_before{false};
 };
 
+struct XPUMultiDecoderParam : ParamBase {
+  lite::Tensor* input{};
+  std::vector<lite::Tensor*> k_cache_in;
+  std::vector<lite::Tensor*> v_cache_in;
+  std::vector<lite::Tensor*> fc_weight;
+  std::vector<lite::Tensor*> fc_bias;
+  std::vector<lite::Tensor*> ln_scale;
+  std::vector<lite::Tensor*> ln_bias;
+  lite::Tensor* fc_weight_max{};
+  lite::Tensor* mask{};
+  lite::Tensor* output{};
+  std::vector<lite::Tensor*> k_cache_out;
+  std::vector<lite::Tensor*> v_cache_out;
+
+  int n_layers{};
+  int head_num{};
+  int size_per_head{};
+  std::string act_type{};
+  std::string precision{};
+  bool enable_qkv_fusion{false};
+};
+
 struct XPUEmbeddingWithEltwiseAddParam : ParamBase {
   std::vector<lite::Tensor*> Ids;
   std::vector<lite::Tensor*> Tables;
