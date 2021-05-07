@@ -1,13 +1,13 @@
 lite_cc_library(subgraph_detector
     SRCS subgraph_detector.cc
-    DEPS mir_pass types subgraph_op)
+    DEPS mir_pass core subgraph_op)
 lite_cc_library(subgraph_pass
     SRCS subgraph_pass.cc
-    DEPS mir_pass types context ${mir_fusers} subgraph_detector)
+    DEPS mir_pass core ${mir_fusers} subgraph_detector)
 if (WITH_TESTING AND NOT LITE_WITH_CUDA AND NOT LITE_WITH_XPU)
     lite_cc_test(test_subgraph_detector
         SRCS subgraph_detector_test.cc
-        DEPS subgraph_detector mir_passes gflags model_parser cxx_api
+        DEPS subgraph_detector mir_passes gflags model_parser cxx_api paddle_api
         ARGS --model_dir=${LITE_MODEL_DIR}/mobilenet_v1 SERIAL)
     add_dependencies(test_subgraph_detector
         extern_lite_download_mobilenet_v1_tar_gz
