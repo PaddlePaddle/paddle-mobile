@@ -18,16 +18,18 @@ __kernel void dropout(__read_only image2d_t input_image,
                       __write_only image2d_t output_image,
                       __private const int out_W,
                       __private const float dropoutPro) {
-  const int out_c = get_global_id(0);
-  const int out_w = get_global_id(1);
-  const int out_nh = get_global_id(2);
 
-  int2 output_pos = {out_c * out_W + out_w, out_nh};
+                       const int out_c = get_global_id(0);
+                       const int out_w = get_global_id(1);
+                       const int out_nh = get_global_id(2);
 
-  CL_DTYPE4 input =
-      READ_IMG_TYPE(CL_DTYPE_CHAR, input_image, SAMPLER, output_pos);
-  CL_DTYPE4 dropout = (CL_DTYPE4)(1 - dropoutPro);
-  CL_DTYPE4 output = dropout * input;
+                       int2 output_pos = {out_c * out_W + out_w, out_nh};
 
-  WRITE_IMG_TYPE(CL_DTYPE_CHAR, output_image, output_pos, output);
+                       CL_DTYPE4 input = READ_IMG_TYPE(CL_DTYPE_CHAR, input_image, SAMPLER, output_pos);
+                       CL_DTYPE4 dropout = (CL_DTYPE4)(1 - dropoutPro);
+                       CL_DTYPE4 output =  dropout * input;
+
+                       WRITE_IMG_TYPE(CL_DTYPE_CHAR, output_image, output_pos, output);
 }
+
+

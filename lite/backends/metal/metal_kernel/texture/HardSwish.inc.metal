@@ -16,9 +16,9 @@
 
 #include "Macro.metal"
 
-// activation function: hard swish
+// 激活函数hard swish
 // output = input * (min(max(0, input + offset), threshold)) / scale
-// please refer to https://www.paddlepaddle.org.cn/documentation/docs/zh/api_cn/layers_cn/hard_swish_cn.html#hard-swish
+// 具体算法详见文档：https://www.paddlepaddle.org.cn/documentation/docs/zh/api_cn/layers_cn/hard_swish_cn.html#hard-swish
 kernel void FUNC2_(hard_swish,
                    P)(texture2d_array<P, access::read> input [[texture(0)]],
                       texture2d_array<P, access::write> output [[texture(1)]],

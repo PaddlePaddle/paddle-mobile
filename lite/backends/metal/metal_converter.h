@@ -50,8 +50,8 @@ class MPSPointerConverter : public DataConverter<P> {
                 for (int kernelW = 0; kernelW < kernelWidth; kernelW++) {
                     for (int inChannel = 0; inChannel < inputChannels; inChannel++) {
                         to[outChannel * inputChannels * kernelHeight * kernelWidth +
-                            kernelH * kernelWidth * inputChannels + kernelW * inputChannels +
-                            inChannel] =
+                           kernelH * kernelWidth * inputChannels + kernelW * inputChannels +
+                           inChannel] =
                             from[outChannel * inputChannels * kernelHeight * kernelWidth +
                                  inChannel * kernelHeight * kernelWidth + kernelH * kernelWidth +
                                  kernelW];
@@ -229,12 +229,8 @@ class MetalConverter {
     }
 
     template <>
-    void NCHW2NHWC<float, MetalHalf>(MetalHalf* dstPtr,
-        const float* srcPtr,
-        int N,
-        int C,
-        int H,
-        int W) {
+    void NCHW2NHWC<float, MetalHalf>(
+        MetalHalf* dstPtr, const float* srcPtr, int N, int C, int H, int W) {
         auto HXW = H * W;
         auto CXHXW = C * H * W;
         int index = 0;
@@ -268,12 +264,8 @@ class MetalConverter {
     }
 
     template <>
-    void NCHW2NHWC<MetalHalf, MetalHalf>(MetalHalf* dstPtr,
-        const MetalHalf* srcPtr,
-        int N,
-        int C,
-        int H,
-        int W) {
+    void NCHW2NHWC<MetalHalf, MetalHalf>(
+        MetalHalf* dstPtr, const MetalHalf* srcPtr, int N, int C, int H, int W) {
         auto HXW = H * W;
         auto CXHXW = C * H * W;
         int index = 0;
@@ -308,12 +300,8 @@ class MetalConverter {
     }
 
     template <>
-    void NHWCExpand2NCHW<float, MetalHalf>(float* dstPtr,
-        const MetalHalf* srcPtr,
-        int N,
-        int C,
-        int H,
-        int W) {
+    void NHWCExpand2NCHW<float, MetalHalf>(
+        float* dstPtr, const MetalHalf* srcPtr, int N, int C, int H, int W) {
         auto C_EXPAND = ((C + 3) / 4) * 4;
         auto HXWXC_E = H * W * C_EXPAND;
         auto WXC_E = W * C_EXPAND;
@@ -332,12 +320,8 @@ class MetalConverter {
     }
 
     template <>
-    void NHWCExpand2NCHW<float, float>(float* dstPtr,
-        const float* srcPtr,
-        int N,
-        int C,
-        int H,
-        int W) {
+    void NHWCExpand2NCHW<float, float>(
+        float* dstPtr, const float* srcPtr, int N, int C, int H, int W) {
         auto C_EXPAND = ((C + 3) / 4) * 4;
         auto HXWXC_E = H * W * C_EXPAND;
         auto WXC_E = W * C_EXPAND;
@@ -355,12 +339,8 @@ class MetalConverter {
     }
 
     template <>
-    void NHWCExpand2NCHW<MetalHalf, float>(MetalHalf* dstPtr,
-        const float* srcPtr,
-        int N,
-        int C,
-        int H,
-        int W) {
+    void NHWCExpand2NCHW<MetalHalf, float>(
+        MetalHalf* dstPtr, const float* srcPtr, int N, int C, int H, int W) {
         auto C_EXPAND = ((C + 3) / 4) * 4;
         auto HXWXC_E = H * W * C_EXPAND;
         auto WXC_E = W * C_EXPAND;
@@ -379,12 +359,8 @@ class MetalConverter {
     }
 
     template <>
-    void NHWCExpand2NCHW<MetalHalf, MetalHalf>(MetalHalf* dstPtr,
-        const MetalHalf* srcPtr,
-        int N,
-        int C,
-        int H,
-        int W) {
+    void NHWCExpand2NCHW<MetalHalf, MetalHalf>(
+        MetalHalf* dstPtr, const MetalHalf* srcPtr, int N, int C, int H, int W) {
         auto C_EXPAND = ((C + 3) / 4) * 4;
         auto HXWXC_E = H * W * C_EXPAND;
         auto WXC_E = W * C_EXPAND;
@@ -438,12 +414,8 @@ class MetalConverter {
     }
 
     template <>
-    void NHWC2NCHW<float, MetalHalf>(float* dstPtr,
-        const MetalHalf* srcPtr,
-        int N,
-        int C,
-        int H,
-        int W) {
+    void NHWC2NCHW<float, MetalHalf>(
+        float* dstPtr, const MetalHalf* srcPtr, int N, int C, int H, int W) {
         auto C_EXPAND = C;
         auto HXWXC_E = H * W * C_EXPAND;
         auto WXC_E = W * C_EXPAND;
@@ -462,12 +434,8 @@ class MetalConverter {
     }
 
     template <>
-    void NHWC2NCHW<MetalHalf, MetalHalf>(MetalHalf* dstPtr,
-        const MetalHalf* srcPtr,
-        int N,
-        int C,
-        int H,
-        int W) {
+    void NHWC2NCHW<MetalHalf, MetalHalf>(
+        MetalHalf* dstPtr, const MetalHalf* srcPtr, int N, int C, int H, int W) {
         auto C_EXPAND = C;
         auto HXWXC_E = H * W * C_EXPAND;
         auto WXC_E = W * C_EXPAND;
@@ -485,12 +453,8 @@ class MetalConverter {
     }
 
     template <>
-    void NHWC2NCHW<MetalHalf, float>(MetalHalf* dstPtr,
-        const float* srcPtr,
-        int N,
-        int C,
-        int H,
-        int W) {
+    void NHWC2NCHW<MetalHalf, float>(
+        MetalHalf* dstPtr, const float* srcPtr, int N, int C, int H, int W) {
         auto C_EXPAND = C;
         auto HXWXC_E = H * W * C_EXPAND;
         auto WXC_E = W * C_EXPAND;

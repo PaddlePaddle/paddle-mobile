@@ -2393,13 +2393,6 @@ struct ArgsortParam : ParamBase {
   bool descending{false};
 };
 
-struct FlipParam : ParamBase {
-  const lite::Tensor* X{};
-  lite::Tensor* Out{};
-
-  std::vector<int> axis;
-};
-
 }  // namespace operators
 }  // namespace lite
 }  // namespace paddle

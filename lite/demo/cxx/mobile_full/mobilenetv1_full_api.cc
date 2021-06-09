@@ -58,22 +58,17 @@ void RunModel() {
   config.set_model_dir(FLAGS_model_dir);
   config.set_power_mode((paddle::lite_api::PowerMode)FLAGS_power_mode);
   config.set_threads(FLAGS_threads);
-
-  std::vector<Place> valid_places;
   if (FLAGS_use_gpu) {
-    valid_places.emplace_back(
-        Place{TARGET(kOpenCL), PRECISION(kFP16), DATALAYOUT(kImageDefault)});
-    valid_places.emplace_back(
-        Place{TARGET(kOpenCL), PRECISION(kFloat), DATALAYOUT(kNCHW)});
-    valid_places.emplace_back(
-        Place{TARGET(kOpenCL), PRECISION(kAny), DATALAYOUT(kImageDefault)});
-    valid_places.emplace_back(
-        Place{TARGET(kOpenCL), PRECISION(kAny), DATALAYOUT(kNCHW)});
-    valid_places.emplace_back(
-        Place{TARGET(kOpenCL), PRECISION(kInt32), DATALAYOUT(kNCHW)});
-    valid_places.emplace_back(Place{TARGET(kARM)});
+    std::vector<Place> valid_places{
+        Place{TARGET(kOpenCL), PRECISION(kFP16), DATALAYOUT(kImageDefault)},
+        Place{TARGET(kOpenCL), PRECISION(kFloat), DATALAYOUT(kNCHW)},
+        Place{TARGET(kOpenCL), PRECISION(kAny), DATALAYOUT(kImageDefault)},
+        Place{TARGET(kOpenCL), PRECISION(kAny), DATALAYOUT(kNCHW)},
+        Place{TARGET(kOpenCL), PRECISION(kInt32), DATALAYOUT(kNCHW)},
+        Place{TARGET(kARM)}};
+
   } else {
-    valid_places.emplace_back(Place{TARGET(kARM), PRECISION(kFloat)});
+    std::vector<Place> valid_places{Place{TARGET(kARM), PRECISION(kFloat)}};
   }
 
   if (FLAGS_prefer_int8_kernel) {

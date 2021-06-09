@@ -26,10 +26,8 @@ __kernel void SplitBatch(__read_only image2d_t input,
   const int width_idx = get_global_id(1);
   const int hb_idx = get_global_id(2);
 
-  const int2 in_pos =
-      (int2)(channel_blk_idx * in_dims_last + width_idx, hb_idx);
-  const CL_DTYPE4 in_data =
-      READ_IMG_TYPE(CL_DTYPE_CHAR, input, SAMPLER, in_pos);
+  const int2 in_pos = (int2)(channel_blk_idx * in_dims_last + width_idx, hb_idx);
+  const CL_DTYPE4 in_data = READ_IMG_TYPE(CL_DTYPE_CHAR, input, SAMPLER, in_pos);
   const int n = hb_idx / width;
 
   int2 out_pos;
@@ -54,10 +52,8 @@ __kernel void SplitChannel(__read_only image2d_t input,
   const int width_idx = get_global_id(1);
   const int hb_idx = get_global_id(2);
 
-  const int2 in_pos =
-      (int2)(channel_blk_idx * in_dims_last + width_idx, hb_idx);
-  const CL_DTYPE4 in_data =
-      READ_IMG_TYPE(CL_DTYPE_CHAR, input, SAMPLER, in_pos);
+  const int2 in_pos = (int2)(channel_blk_idx * in_dims_last + width_idx, hb_idx);
+  const CL_DTYPE4 in_data = READ_IMG_TYPE(CL_DTYPE_CHAR, input, SAMPLER, in_pos);
   const int c = channel_blk_idx * 4;
 
   // write all data to output0 directly
@@ -67,8 +63,7 @@ __kernel void SplitChannel(__read_only image2d_t input,
 
   // deal with the last channel of output0
   int channel_offset = out0_dims_axis % 4;
-  if (channel_blk_idx ==
-      out0_dims_axis / 4) {  // only the last channel_blk of output0 hits this
+  if (channel_blk_idx == out0_dims_axis / 4) { // only the last channel_blk of output0 hits this
     if (channel_offset != 0) {
       CL_DTYPE4 out0_last_val;
       if (channel_offset == 1) {
@@ -83,19 +78,13 @@ __kernel void SplitChannel(__read_only image2d_t input,
   }
 
   // deal with output1
-  if (c + 4 >= out0_dims_axis) {  // only theads for output1 hit this
-    const int2 out_pos = (int2)(
-        (channel_blk_idx - out0_dims_axis / 4) * in_dims_last + width_idx,
-        hb_idx);
-    if (channel_offset == 0) {  // write all data to output1 directly
+  if (c + 4 >= out0_dims_axis) { // only theads for output1 hit this
+    const int2 out_pos = (int2)((channel_blk_idx - out0_dims_axis / 4) * in_dims_last + width_idx, hb_idx);
+    if (channel_offset == 0) { // write all data to output1 directly
       WRITE_IMG_TYPE(CL_DTYPE_CHAR, output1, out_pos, in_data);
     } else {
       CL_DTYPE4 combined_val;
-      CL_DTYPE4 latter =
-          READ_IMG_TYPE(CL_DTYPE_CHAR,
-                        input,
-                        SAMPLER,
-                        (int2)(in_pos.x + in_dims_last, in_pos.y));
+      CL_DTYPE4 latter = READ_IMG_TYPE(CL_DTYPE_CHAR, input, SAMPLER, (int2)(in_pos.x + in_dims_last, in_pos.y));
       if (channel_offset == 1) {
         combined_val = (CL_DTYPE4)(in_data.y, in_data.z, in_data.w, latter.x);
       } else if (channel_offset == 2) {
@@ -120,10 +109,8 @@ __kernel void SplitHeight(__read_only image2d_t input,
   const int width_idx = get_global_id(1);
   const int hb_idx = get_global_id(2);
 
-  const int2 in_pos =
-      (int2)(channel_blk_idx * in_dims_last + width_idx, hb_idx);
-  const CL_DTYPE4 in_data =
-      READ_IMG_TYPE(CL_DTYPE_CHAR, input, SAMPLER, in_pos);
+  const int2 in_pos = (int2)(channel_blk_idx * in_dims_last + width_idx, hb_idx);
+  const CL_DTYPE4 in_data = READ_IMG_TYPE(CL_DTYPE_CHAR, input, SAMPLER, in_pos);
   const int h = hb_idx % width;
 
   int2 out_pos;
@@ -148,10 +135,8 @@ __kernel void SplitWidth(__read_only image2d_t input,
   const int width_idx = get_global_id(1);
   const int hb_idx = get_global_id(2);
 
-  const int2 in_pos =
-      (int2)(channel_blk_idx * in_dims_last + width_idx, hb_idx);
-  const CL_DTYPE4 in_data =
-      READ_IMG_TYPE(CL_DTYPE_CHAR, input, SAMPLER, in_pos);
+  const int2 in_pos = (int2)(channel_blk_idx * in_dims_last + width_idx, hb_idx);
+  const CL_DTYPE4 in_data = READ_IMG_TYPE(CL_DTYPE_CHAR, input, SAMPLER, in_pos);
 
   int2 out_pos;
   if (width_idx < out0_dims_axis) {

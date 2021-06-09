@@ -13,23 +13,21 @@
 // limitations under the License.
 
 #pragma once
+#include "lite/core/kernel.h"
 
 namespace paddle {
 namespace lite {
-namespace arm {
-namespace math {
-namespace fp16 {
-typedef __fp16 float16_t;
-void shuffle_channel(const float16_t* inputs,
-                     float16_t* outputs,
-                     int group,
-                     int num,
-                     int channel,
-                     int height,
-                     int width);
+namespace kernels {
+namespace xpu {
 
-}  // namespace fp16
-}  // namespace math
-}  // namespace arm
+class ReduceMeanCompute : public KernelLite<TARGET(kXPU), PRECISION(kFloat)> {
+ public:
+  void Run() override;
+
+  virtual ~ReduceMeanCompute() = default;
+};
+
+}  // namespace xpu
+}  // namespace kernels
 }  // namespace lite
 }  // namespace paddle

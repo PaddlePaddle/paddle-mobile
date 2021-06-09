@@ -92,8 +92,6 @@ using reduce_prob_arm_int32 =
     paddle::lite::kernels::arm::ReduceProdCompute<int, PRECISION(kInt32)>;
 using reduce_prob_arm_float =
     paddle::lite::kernels::arm::ReduceProdCompute<float, PRECISION(kFloat)>;
-using reduce_prob_arm_int64 =
-    paddle::lite::kernels::arm::ReduceProdCompute<int64_t, PRECISION(kFloat)>;
 REGISTER_LITE_KERNEL(
     reduce_prod, kARM, kInt32, kNCHW, reduce_prob_arm_int32, def)
     .BindInput("X", {LiteType::GetTensorTy(TARGET(kARM), PRECISION(kInt32))})
@@ -104,10 +102,4 @@ REGISTER_LITE_KERNEL(
     reduce_prod, kARM, kFloat, kNCHW, reduce_prob_arm_float, def)
     .BindInput("X", {LiteType::GetTensorTy(TARGET(kARM), PRECISION(kFloat))})
     .BindOutput("Out", {LiteType::GetTensorTy(TARGET(kARM), PRECISION(kFloat))})
-    .Finalize();
-
-REGISTER_LITE_KERNEL(
-    reduce_prod, kARM, kFloat, kNCHW, reduce_prob_arm_int64, reduce_prod_i64)
-    .BindInput("X", {LiteType::GetTensorTy(TARGET(kARM), PRECISION(kInt64))})
-    .BindOutput("Out", {LiteType::GetTensorTy(TARGET(kARM), PRECISION(kInt64))})
     .Finalize();

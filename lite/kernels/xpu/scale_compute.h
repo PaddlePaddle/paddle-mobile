@@ -21,7 +21,6 @@ namespace lite {
 namespace kernels {
 namespace xpu {
 
-template <typename T>
 class ScaleCompute : public KernelLite<TARGET(kXPU), PRECISION(kFloat)> {
  public:
   using param_t = operators::ScaleParam;

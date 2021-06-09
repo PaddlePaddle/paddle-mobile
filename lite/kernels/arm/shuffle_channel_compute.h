@@ -21,15 +21,13 @@ namespace lite {
 namespace kernels {
 namespace arm {
 
-#ifdef ENABLE_ARM_FP16
 class ShuffleChannelCompute
-    : public KernelLite<TARGET(kARM), PRECISION(kFP16)> {
+    : public KernelLite<TARGET(kARM), PRECISION(kFloat)> {
  public:
   void Run() override;
 
   virtual ~ShuffleChannelCompute() = default;
 };
-#endif
 
 }  // namespace arm
 }  // namespace kernels

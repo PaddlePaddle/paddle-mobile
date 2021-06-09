@@ -134,10 +134,7 @@ enum class ActivationType : int {
   kSigmoid_v2 = 16,
   kTanh_v2 = 17,
   kGelu = 18,
-  kErf = 19,
-  kSign = 20,
-  kSoftPlus = 21,
-  NUM = 22,
+  NUM = 19,
 };
 
 static size_t PrecisionTypeLength(PrecisionType type) {

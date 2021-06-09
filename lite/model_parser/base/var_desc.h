@@ -59,9 +59,5 @@ class VarDescAPI : public VarDescReadAPI, public VarDescWriteAPI {
   virtual ~VarDescAPI() = default;
 };
 
-inline bool IsParamVarDesc(const VarDescReadAPI& var) {
-  return var.GetType() == VarDataType::LOD_TENSOR && var.Persistable();
-}
-
 }  // namespace lite
 }  // namespace paddle

@@ -21,10 +21,9 @@ namespace lite {
 namespace kernels {
 namespace xpu {
 
-template <typename T>
-void ScaleCompute<T>::Run() {
-  auto& param = this->template Param<param_t>();
-  auto& ctx = this->ctx_->template As<XPUContext>();
+void ScaleCompute::Run() {
+  auto& param = this->Param<param_t>();
+  auto& ctx = this->ctx_->As<XPUContext>();
 
   auto& x_dims = param.x->dims();
   if (std::fabs(param.scale - 1.0f) < 1e-7 && std::fabs(param.bias) < 1e-7) {
@@ -32,14 +31,13 @@ void ScaleCompute<T>::Run() {
     param.output->ShareDataWith(*x);
     param.output->Resize(param.output->dims());
   } else {
-    int r = xdnn::scale<T>(
-        ctx.GetRawContext(),
-        param.x->template data<T>(),                          /* x */
-        param.output->template mutable_data<T>(TARGET(kXPU)), /* y */
-        x_dims.production(),                                  /* len */
-        param.bias_after_scale, /* bias_after_scale */
-        param.scale,            /* alpha */
-        param.bias);            /* beta */
+    int r = xdnn::scale(ctx.GetRawContext(),
+                        param.x->data<float>(),                          /* x */
+                        param.output->mutable_data<float>(TARGET(kXPU)), /* y */
+                        x_dims.production(),    /* len */
+                        param.bias_after_scale, /* bias_after_scale */
+                        param.scale,            /* alpha */
+                        param.bias);            /* beta */
     CHECK_EQ(r, 0);
   }
   if (!param.x->lod().empty()) {
@@ -52,22 +50,8 @@ void ScaleCompute<T>::Run() {
 }  // namespace lite
 }  // namespace paddle
 
-REGISTER_LITE_KERNEL(scale,
-                     kXPU,
-                     kFloat,
-                     kNCHW,
-                     paddle::lite::kernels::xpu::ScaleCompute<float>,
-                     def)
+REGISTER_LITE_KERNEL(
+    scale, kXPU, kFloat, kNCHW, paddle::lite::kernels::xpu::ScaleCompute, def)
     .BindInput("X", {LiteType::GetTensorTy(TARGET(kXPU))})
     .BindOutput("Out", {LiteType::GetTensorTy(TARGET(kXPU))})
-    .Finalize();
-
-REGISTER_LITE_KERNEL(scale,
-                     kXPU,
-                     kFloat,
-                     kNCHW,
-                     paddle::lite::kernels::xpu::ScaleCompute<int>,
-                     int32)
-    .BindInput("X", {LiteType::GetTensorTy(TARGET(kXPU), PRECISION(kInt32))})
-    .BindOutput("Out", {LiteType::GetTensorTy(TARGET(kXPU), PRECISION(kInt32))})
     .Finalize();
