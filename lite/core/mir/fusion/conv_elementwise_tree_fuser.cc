@@ -42,10 +42,9 @@ void ConvElementwiseTreeFuser::BuildPattern() {
   auto elementwise_teller = [](const Node* node) -> bool {
     int axis =
         const_cast<Node*>(node)->AsStmt().op_info()->GetAttr<int>("axis");
-    bool fuse_scale =
-        const_cast<Node*>(node)->AsStmt().op_info()->HasAttr("fuse_scale");
-    return (axis == -1) && (!fuse_scale);
+    return (axis == -1);
   };
+
   auto* conv =
       OpNode("conv", conv_type_)->assert_is_op(conv_type_)->AsIntermediate();
   auto* elementwise = OpNode("elementwise", elementwise_type_)
@@ -129,10 +128,11 @@ void ConvElementwiseTreeFuser::InsertNewNode(SSAGraph* graph,
   }
 
   auto op_desc = GenOpDesc(matched);
-  auto conv_op_new = LiteOpRegistry::Global().Create(conv_type_);
+  auto conv_op_new = LiteOpRegistry::Global().Create("conv_elementwise_tree");
   auto conv_op_old = matched.at("conv")->stmt()->op();
   auto* scope = conv_op_old->scope();
   auto& valid_places = conv_op_old->valid_places();
+
   conv_op_new->Attach(op_desc, scope);
 
   auto* new_op_node = graph->GraphCreateInstructNode(conv_op_new, valid_places);
@@ -151,7 +151,14 @@ void ConvElementwiseTreeFuser::InsertNewNode(SSAGraph* graph,
 
 cpp::OpDesc ConvElementwiseTreeFuser::GenOpDesc(const key2nodes_t& matched) {
   auto op_desc = *matched.at("conv")->stmt()->op_info();
-  op_desc.SetType(conv_type_);
+  auto conv_with_act = op_desc.HasAttr("with_act");
+  // Todo(int8 conv): Get the input scale from conv
+
+  op_desc.mutable_inputs()->clear();
+  op_desc.mutable_outputs()->clear();
+  op_desc.SetType("conv_elementwise_tree");
+  op_desc.SetInput("Input0", {matched.at("conv_input")->arg()->name});
+  op_desc.SetInput("Input1", {matched.at("elementwise_input")->arg()->name});
   op_desc.SetInput("Filter", {matched.at("conv_filter")->arg()->name});
   if (conv_has_bias_) {
     op_desc.SetInput("Bias", {matched.at("conv_bias")->arg()->name});
@@ -159,11 +166,44 @@ cpp::OpDesc ConvElementwiseTreeFuser::GenOpDesc(const key2nodes_t& matched) {
   if (conv_has_prelu_alpha_) {
     op_desc.SetInput("Prelu_alpha", {matched.at("conv_alpha")->arg()->name});
   }
-  op_desc.SetAttr("fuse_elementwise_op_type", elementwise_type_);
-  op_desc.SetInput("SecondInput",
-                   {matched.at("elementwise_input")->arg()->name});
+  if (conv_with_act && op_desc.GetAttr<bool>("with_act")) {
+    auto conv_act_type = op_desc.GetAttr<std::string>("act_type");
+    op_desc.SetAttr("has_conv_act", true);
+    op_desc.SetAttr("conv_act_type", conv_act_type);
+    if (conv_act_type == "relu6") {
+      op_desc.SetAttr("conv_relu6",
+                      op_desc.GetAttr<float>("fuse_brelu_threshold"));  // 6.f
+    } else if (conv_act_type == "leaky_relu") {
+      op_desc.SetAttr("conv_leaky_relu",
+                      op_desc.GetAttr<float>("leaky_relu_alpha"));  // 6.f
+    } else {
+      LOG(FATAL) << "The fused conv only supports fuse with relu, relu6, "
+                    "leakyrelu, prelu, while the given activation type is "
+                 << conv_act_type;
+    }
+  } else {
+    op_desc.SetAttr("has_conv_act", false);
+  }
+  auto elementwise_op_desc = *matched.at("elementwise")->stmt()->op_info();
+  bool fuse_scale = elementwise_op_desc.HasAttr("fuse_scale");
+  bool elt_act_type = elementwise_op_desc.HasAttr("act_type");
+  op_desc.SetAttr("axis", -1);
+  // alpha * ((input1 * w + b) + input2) + beta
+  if (fuse_scale) {
+    op_desc.SetAttr("alpha", elementwise_op_desc.GetAttr<float>("scale"));
+    op_desc.SetAttr("beta", elementwise_op_desc.GetAttr<float>("bias"));
+  } else {
+    op_desc.SetAttr("alpha", 1.f);
+    op_desc.SetAttr("beta", 0.f);
+  }
+  if (elt_act_type) {
+    op_desc.SetAttr("has_elt_act", true);
+    op_desc.SetAttr("elt_act_type",
+                    elementwise_op_desc.GetAttr<std::string>("act_type"));
+  } else {
+    op_desc.SetAttr("has_elt_act", false);
+  }
   op_desc.SetOutput("Output", {matched.at("elementwise_output")->arg()->name});
-
   return op_desc;
 }
 

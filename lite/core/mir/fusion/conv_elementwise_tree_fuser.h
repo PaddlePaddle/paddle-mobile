@@ -41,10 +41,10 @@ class ConvElementwiseTreeFuser : public FuseBase {
  private:
   cpp::OpDesc GenOpDesc(const key2nodes_t& matched) override;
 
-  std::string conv_type_{""};
+  std::string conv_type_{"conv2d"};
   bool conv_has_bias_{false};
   bool conv_has_prelu_alpha_{false};
-  std::string elementwise_type_{""};
+  std::string elementwise_type_{"elementwise_add"};
 };
 
 }  // namespace fusion

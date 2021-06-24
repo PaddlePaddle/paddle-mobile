@@ -13,6 +13,7 @@
 // limitations under the License.
 
 #include "lite/core/mir/fusion/conv_elementwise_tree_fuse_pass.h"
+#include <list>
 #include <memory>
 #include <vector>
 #include "lite/core/mir/fusion/conv_elementwise_tree_fuser.h"
@@ -25,7 +26,7 @@ namespace mir {
 void ConvElementwiseTreeFusePass::Apply(
     const std::unique_ptr<SSAGraph>& graph) {
   // initialze fuser params
-  std::vector<bool> conv_has_prelu_alpha_cases{true, false};
+  std::vector<bool> conv_has_prelu_alpha_cases{false};
   std::vector<bool> conv_has_bias_cases{true, false};
   // TODO(zhaoyang34): Support "depthwise_conv2d", "conv2d_transpose"
   std::vector<std::string> conv_type_cases{"conv2d"};
@@ -33,6 +34,32 @@ void ConvElementwiseTreeFusePass::Apply(
   // "elementwise_div"
   std::vector<std::string> elementwise_type_cases{
       "elementwise_add", "fusion_elementwise_add_activation"};
+  bool has_opencl = false;
+  bool has_weight_quant = false;
+  for (auto& place : graph->valid_places()) {
+    if (place.target == TARGET(kOpenCL)) {
+      has_opencl = true;
+      break;
+    }
+  }
+  const std::list<mir::Node>& nodes = graph->nodes();
+  for (auto& node : nodes) {
+    if (node.IsStmt()) {
+      auto* op_info = (node.stmt())->op_info();
+      if (op_info->HasAttr("quantization_type")) {
+        has_weight_quant = true;
+        break;
+      }
+    }
+  }
+  // only opencl support prelu
+  if (has_opencl) {
+    conv_has_prelu_alpha_cases.push_back(true);
+  }
+  // only support fp32
+  if (has_weight_quant) {
+    return;
+  }
 
   // start fuse using params
   for (auto conv_has_prelu_alpha : conv_has_prelu_alpha_cases) {
@@ -58,4 +85,4 @@ void ConvElementwiseTreeFusePass::Apply(
 
 REGISTER_MIR_PASS(lite_conv_elementwise_tree_fuse_pass,
                   paddle::lite::mir::ConvElementwiseTreeFusePass)
-    .BindTargets({TARGET(kOpenCL)});
+    .BindTargets({TARGET(kARM)});  // TARGET(kOpenCL)
