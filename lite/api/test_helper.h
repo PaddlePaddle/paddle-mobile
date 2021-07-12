@@ -52,11 +52,26 @@ namespace paddle {
 namespace lite {
 
 inline double GetCurrentUS() {
+#ifdef __linux__
   struct timeval time;
   gettimeofday(&time, NULL);
   return 1e+6 * time.tv_sec + time.tv_usec;
+#else
+  long tv_sec;
+  long tv_usec;
+  static const uint64_t EPOCH = ((uint64_t) 116444736000000000ULL);
+  SYSTEMTIME  system_time;
+  FILETIME    file_time;
+  uint64_t    time;
+  GetSystemTime( &system_time );
+  SystemTimeToFileTime( &system_time, &file_time );
+  time =  ((uint64_t)file_time.dwLowDateTime )      ;
+  time += ((uint64_t)file_time.dwHighDateTime) << 32;
+  tv_sec  = (long) ((time - EPOCH) / 10000000L);
+  tv_usec = (long) (system_time.wMilliseconds * 1000);
+  return 1e+6 * tv_sec + tv_usec;
+#endif
 }
-
 template <typename T>
 double compute_mean(const T* in, const size_t length) {
   double sum = 0.;

@@ -37,6 +37,7 @@
 #define GOOGLE_GLOG_DLL_DECL
 #include <io.h>  // _popen, _pclose
 #include <stdio.h>
+#include <stdint.h>
 #define NOMINMAX  // msvc max/min macro conflict with std::min/max
 #include <windows.h>
 #include <winsock.h>
