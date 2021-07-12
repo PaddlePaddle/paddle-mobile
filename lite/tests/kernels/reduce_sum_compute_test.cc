@@ -119,6 +119,32 @@ void reduce_sum_w(const float* src,
   }
 }
 
+void reduce_sum(const float* src, float* dst, const DDim& x_dim, int dims) {
+  int reduce_b[3] = {1, 1, 1};
+  reduce_b[dims] = 0;
+  DDim reduce_dim{x_dim};
+  reduce_dim[dims] = 1;
+  int dim_size = 1;
+  for (int i = 0; i < 3; i++) {
+    if (i != dims) {
+      dim_size *= x_dim[i];
+    }
+  }
+  for (int i = 0; i < dim_size; i++) {
+    dst[i] = 0.0;
+  }
+  for (int i = 0; i < x_dim[0]; i++) {
+    for (int j = 0; j < x_dim[1]; j++) {
+      for (int k = 0; k < x_dim[2]; k++) {
+        int src_index = i * x_dim[1] * x_dim[2] + j * x_dim[2] + k;
+        int dst_index = i * reduce_dim[1] * reduce_dim[2] * reduce_b[0] +
+                        j * reduce_dim[2] * reduce_b[1] + k * reduce_b[2];
+        dst[dst_index] += static_cast<float>(src[src_index]);
+      }
+    }
+  }
+}
+
 void reduce_sum_all(const float* src,
                     float* dst,
                     int num_in,
@@ -255,39 +281,49 @@ class ReduceSumComputeTester : public arena::TestCase {
     out->Resize(DDim(out_dims));
 
     auto* out_data = out->mutable_data<float>();
-    int in_n = x_dims_[0];
-    int in_c = x_dims_[1];
-    int in_h = x_dims_[2];
-    int in_w = x_dims_[3];
+    if (x_dims_.size() == 4) {
+      int in_n = x_dims_[0];
+      int in_c = x_dims_[1];
+      int in_h = x_dims_[2];
+      int in_w = x_dims_[3];
 
-    if (reduce_all_) {
-      reduce_sum_all(x_data, out_data, in_n, in_c, in_h, in_w);
-    } else if (dim_.size() == 1) {
-      switch (dim_[0]) {
-        case 0:
-          reduce_sum_n(x_data, out_data, in_n, in_c, in_h, in_w);
-          break;
-        case 1:
-          reduce_sum_c(x_data, out_data, in_n, in_c, in_h, in_w);
-          break;
-        case 2:
-          reduce_sum_h(x_data, out_data, in_n, in_c, in_h, in_w);
-          break;
-        case 3:
-          reduce_sum_w(x_data, out_data, in_n, in_c, in_h, in_w);
-          break;
-        default:
-          LOG(FATAL) << "error!!!";
+      if (reduce_all_) {
+        reduce_sum_all(x_data, out_data, in_n, in_c, in_h, in_w);
+      } else if (dim_.size() == 1) {
+        switch (dim_[0]) {
+          case 0:
+            reduce_sum_n(x_data, out_data, in_n, in_c, in_h, in_w);
+            break;
+          case 1:
+            reduce_sum_c(x_data, out_data, in_n, in_c, in_h, in_w);
+            break;
+          case 2:
+            reduce_sum_h(x_data, out_data, in_n, in_c, in_h, in_w);
+            break;
+          case 3:
+            reduce_sum_w(x_data, out_data, in_n, in_c, in_h, in_w);
+            break;
+          default:
+            LOG(FATAL) << "error!!!";
+        }
+      } else if (dim_.size() == 2) {
+        if (dim_[0] == 0 && dim_[1] == 1) {
+          reduce_sum_nc(x_data, out_data, in_n, in_c, in_h, in_w);
+        } else if (dim_[0] == 1 && dim_[1] == 2) {
+          reduce_sum_ch(x_data, out_data, in_n, in_c, in_h, in_w);
+        } else if (dim_[0] == 2 && dim_[1] == 3) {
+          reduce_sum_hw(x_data, out_data, in_n, in_c, in_h, in_w);
+        } else {
+          LOG(FATAL) << "invalid dims_!!";
+        }
       }
-    } else if (dim_.size() == 2) {
-      if (dim_[0] == 0 && dim_[1] == 1) {
-        reduce_sum_nc(x_data, out_data, in_n, in_c, in_h, in_w);
-      } else if (dim_[0] == 1 && dim_[1] == 2) {
-        reduce_sum_ch(x_data, out_data, in_n, in_c, in_h, in_w);
-      } else if (dim_[0] == 2 && dim_[1] == 3) {
-        reduce_sum_hw(x_data, out_data, in_n, in_c, in_h, in_w);
-      } else {
-        LOG(FATAL) << "invalid dims_!!";
+    } else {
+      if (dim_.size() == 1 && !reduce_all_) {
+        if (dim_[0] < x_dims_.size()) {
+          reduce_sum(x_data, out_data, x_dims_, dim_[0]);
+        } else {
+          LOG(FATAL) << "error!!!";
+        }
       }
     }
   }
@@ -329,6 +365,20 @@ void test_reduce_sum(Place place) {
               }
             }
           }
+        }
+      }
+    }
+  }
+  std::vector<std::vector<int>> reduce_dimm{{0}, {1}, {2}};
+  for (auto dim : reduce_dimm) {
+    for (auto c : {1, 3}) {
+      for (auto h : {1, 3}) {
+        for (auto w : {1, 4}) {
+          auto x_dims = DDim(std::vector<int64_t>({c, h, w}));
+          std::unique_ptr<arena::TestCase> tester(new ReduceSumComputeTester(
+              place, "def", dim, false, false, x_dims));
+          arena::Arena arena(std::move(tester), place, 2e-5);
+          arena.TestPrecision();
         }
       }
     }
