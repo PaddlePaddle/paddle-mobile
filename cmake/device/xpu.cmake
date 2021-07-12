@@ -85,10 +85,15 @@ endif ()
 
 # **DEPRECATED**, use XPU_SDK_URL/XPU_SDK_ENV in the future
 message (STATUS "XPU_SDK_ROOT: ${XPU_SDK_ROOT}")
-
-set (XPU_XTDK_INCLUDE_DIR    "${XPU_SDK_ROOT}/XTDK/include" CACHE PATH "xpu xtdk include directory" FORCE)
-set (XPUAPI_LIB              "${XPU_SDK_ROOT}/XTDK/shlib/libxpuapi.so" CACHE FILEPATH "libxpuapi.so" FORCE)
-set (XPURT_LIB               "${XPU_SDK_ROOT}/XTDK/runtime/shlib/libxpurt.so" CACHE FILEPATH "libxpurt.so" FORCE)
+if(MSVC)
+  set (XPU_XTDK_INCLUDE_DIR    "${XPU_SDK_ROOT}/XTDK/include" CACHE PATH "xpu xtdk include directory" FORCE)
+  set (XPUAPI_LIB              "${XPU_SDK_ROOT}/XTDK/lib/libxpuapi.lib" CACHE FILEPATH "libxpuapi.lib" FORCE)
+  set (XPURT_LIB               "${XPU_SDK_ROOT}/XTDK/runtime/lib/libxpurt.lib" CACHE FILEPATH "libxpurt.lib" FORCE)
+else()
+  set (XPU_XTDK_INCLUDE_DIR    "${XPU_SDK_ROOT}/XTDK/include" CACHE PATH "xpu xtdk include directory" FORCE)
+  set (XPUAPI_LIB              "${XPU_SDK_ROOT}/XTDK/shlib/libxpuapi.so" CACHE FILEPATH "libxpuapi.so" FORCE)
+  set (XPURT_LIB               "${XPU_SDK_ROOT}/XTDK/runtime/shlib/libxpurt.so" CACHE FILEPATH "libxpurt.so" FORCE)
+endif()
 
 include_directories (${XPU_XTDK_INCLUDE_DIR})
 
@@ -102,11 +107,19 @@ set (xpu_runtime_libs xpuapi xpurt CACHE INTERNAL "xpu runtime libs")
 set (xpu_builder_libs xpuapi xpurt CACHE INTERNAL "xpu builder libs")
 
 if (LITE_WITH_XTCL)
-  set (XPU_XTCL_INCLUDE_DIR  "${XPU_SDK_ROOT}/XTCL/include" CACHE PATH "xpu xtcl include directory" FORCE)
-  set (XTCL_LIB              "${XPU_SDK_ROOT}/XTCL/shlib/libxtcl.so" CACHE FILEPATH "libxtcl.a" FORCE)
-  set (TVM_LIB               "${XPU_SDK_ROOT}/XTCL/shlib/libtvm.so" CACHE FILEPATH "libtvm.so" FORCE)
-  set (LLVM_10_LIB           "${XPU_SDK_ROOT}/XTCL/shlib/libLLVM-10.so" CACHE FILEPATH "libLLVM-10.so" FORCE)
-  set (XPUJITC_LIB           "${XPU_SDK_ROOT}/XTCL/shlib/libxpujitc.so" CACHE FILEPATH "libxpujitc.so" FORCE)
+
+  if(WIN32)
+    set (XPU_XTCL_INCLUDE_DIR  "${XPU_SDK_ROOT}/XTCL/include" CACHE PATH "xpu xtcl include directory" FORCE)
+    set (XTCL_LIB              "${XPU_SDK_ROOT}/XTCL/share/xtcl.lib" CACHE FILEPATH "libxtcl.a" FORCE)
+    set (TVM_LIB               "${XPU_SDK_ROOT}/XTCL/share/tvm.lib" CACHE FILEPATH "libtvm.so" FORCE)
+  else()
+
+    set (XPU_XTCL_INCLUDE_DIR  "${XPU_SDK_ROOT}/XTCL/include" CACHE PATH "xpu xtcl include directory" FORCE)
+    set (XTCL_LIB              "${XPU_SDK_ROOT}/XTCL/shlib/libxtcl.so" CACHE FILEPATH "libxtcl.a" FORCE)
+    set (TVM_LIB               "${XPU_SDK_ROOT}/XTCL/shlib/libtvm.so" CACHE FILEPATH "libtvm.so" FORCE)
+    set (LLVM_10_LIB           "${XPU_SDK_ROOT}/XTCL/shlib/libLLVM-10.so" CACHE FILEPATH "libLLVM-10.so" FORCE)
+    set (XPUJITC_LIB           "${XPU_SDK_ROOT}/XTCL/shlib/libxpujitc.so" CACHE FILEPATH "libxpujitc.so" FORCE)
+  endif()
 
   include_directories (${XPU_XTCL_INCLUDE_DIR})
 
