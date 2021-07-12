@@ -15,11 +15,14 @@ set BUILD_PLATFORM=x64
 set MSVC_STATIC_CRT=ON
 set WITH_STATIC_MKL=OFF
 set WITH_OPENCL=OFF
+set BUILD_XTCL=OFF
+set BUILD_TYPE=RelWithDebInfo
 set WITH_AVX=ON
 set CMAKE_GENERATOR=Visual Studio 14 2015
 set ARCH=""
 set WITH_STRIP=OFF
 set OPTMODEL_DIR=""
+set XPU_SDK_ROOT=""
 set THIRDPARTY_TAR=https://paddlelite-data.bj.bcebos.com/third_party_libs/third-party-ea5576.tar.gz
 
 set workspace=%source_path%
@@ -44,12 +47,20 @@ if /I "%1"=="with_extra" (
     set BUILD_PLATFORM=Win32
 ) else if /I  "%1"=="use_ninja" (
     set CMAKE_GENERATOR=Ninja
+) else if /I  "%1"=="use_vs2017" (
+    set CMAKE_GENERATOR=Visual Studio 15 2017
+) else if /I  "%1"=="use_vs2019" (
+    set CMAKE_GENERATOR=Visual Studio 16 2019
 ) else if /I  "%1"=="with_dynamic_crt" (
     set MSVC_STATIC_CRT=OFF
 ) else if /I  "%1"=="with_static_mkl" (
     set WITH_STATIC_MKL=ON
 ) else if /I  "%1"=="with_opencl" (
     set WITH_OPENCL=ON
+) else if /I  "%1"=="build_xtcl" (
+    set BUILD_XTCL=ON
+) else if /I  "%1"=="xpu_sdk_root" (
+    set XPU_SDK_ROOT="%2"
 ) else if /I  "%1"=="without_avx" (
     set WITH_AVX=OFF
 ) else if /I  "%1"=="build_for_ci" (
@@ -86,11 +97,20 @@ echo "|  BUILD_PLATFORM=%BUILD_PLATFORM%                                        
 echo "|  WITH_STATIC_MKL=%WITH_STATIC_MKL%                                                                  |"
 echo "|  MSVC_STATIC_CRT=%MSVC_STATIC_CRT%                                                                  |"
 echo "|  WITH_OPENCL=%WITH_OPENCL%                                                                          |"
-echo "|  WITH_AVX=%WITH_AVX%                                                                              |"
+echo "|  BUILD_XTCL=%BUILD_XTCL%                                                                          |"
+echo "|  XPU_SDK_ROOT=%XPU_SDK_ROOT%                                                                          |"
+echo "|  WITH_AVX=%WITH_AVX%                                                                                |"
 echo "------------------------------------------------------------------------------------------------------|"
 
 
-set vcvarsall_dir=C:\Program Files (x86)\Microsoft Visual Studio 14.0\VC\vcvarsall.bat
+set vcvarsall_dir=C:\Program Files ^(x86^)\Microsoft Visual Studio 14.0\VC\vcvarsall.bat
+if "%CMAKE_GENERATOR%"=="Visual Studio 14 2015" (
+  set vcvarsall_dir=C:\Program Files ^(x86^)\Microsoft Visual Studio 14.0\VC\vcvarsall.bat
+) else if "%CMAKE_GENERATOR%"=="Visual Studio 15 2017" (
+  set vcvarsall_dir=C:\Program Files ^(x86^)\Microsoft Visual Studio\2017\Community\VC\Auxiliary\Build\vcvarsall.bat
+) else if "%CMAKE_GENERATOR%"=="Visual Studio 16 2019" (
+  set vcvarsall_dir=C:\Program Files ^(x86^)\Microsoft Visual Studio\2019\Community\VC\Auxiliary\Build\vcvarsall.bat
+)
 IF NOT EXIST "%vcvarsall_dir%" (
   goto set_vcvarsall_dir
 )
@@ -140,7 +160,7 @@ if "%CMAKE_GENERATOR%"=="Ninja" (
     goto ninja_build
 )
 
-    cmake %root_dir%  -G "Visual Studio 14 2015" -A %BUILD_PLATFORM% ^
+    cmake %root_dir%  -G "%CMAKE_GENERATOR%" -A %BUILD_PLATFORM% ^
             -DMSVC_STATIC_CRT=%MSVC_STATIC_CRT% ^
             -DWITH_MKL=ON      ^
             -DWITH_MKLDNN=OFF   ^
@@ -149,9 +169,13 @@ if "%CMAKE_GENERATOR%"=="Ninja" (
             -DLITE_WITH_PROFILE=%WITH_PROFILE% ^
             -DLITE_WITH_PRECISION_PROFILE=%WITH_PRECISION_PROFILE% ^
             -DWITH_LITE=ON ^
+            -DCMAKE_BUILD_TYPE=RelWithDebInfo ^
+            -DTHIRD_PARTY_BUILD_TYPE=Release ^
             -DLITE_WITH_LIGHT_WEIGHT_FRAMEWORK=OFF ^
             -DLITE_WITH_ARM=OFF ^
+            -DLITE_WITH_XPU=ON ^
             -DLITE_WITH_OPENCL=%WITH_OPENCL% ^
+            -DLITE_WITH_XTCL=%BUILD_XTCL% ^
             -DLITE_BUILD_EXTRA=%BUILD_EXTRA% ^
             -DLITE_WITH_PYTHON=%WITH_PYTHON% ^
             -DWITH_TESTING=%WITH_TESTING%    ^
@@ -159,26 +183,27 @@ if "%CMAKE_GENERATOR%"=="Ninja" (
             -DWITH_STATIC_MKL=%WITH_STATIC_MKL%  ^
             -DLITE_BUILD_TAILOR=%WITH_STRIP%  ^
             -DLITE_OPTMODEL_DIR=%OPTMODEL_DIR%  ^
+	    -DXPU_SDK_ROOT=%XPU_SDK_ROOT%  ^
             -DPYTHON_EXECUTABLE="%python_path%"
 
 if "%BUILD_FOR_CI%"=="ON" (
     call "%vcvarsall_dir%" amd64
-    msbuild /m:%cores% /p:Configuration=Release lite\lite_compile_deps.vcxproj
+    msbuild /m:%cores% /p:Configuration=%BUILD_TYPE% lite\lite_compile_deps.vcxproj
     call:test_server
-    cmake ..   -G "Visual Studio 14 2015 Win64" -T host=x64 -DWITH_LITE=ON -DLITE_ON_MODEL_OPTIMIZE_TOOL=ON -DWITH_TESTING=OFF -DLITE_BUILD_EXTRA=ON
-    msbuild /m:%cores% /p:Configuration=Release lite\api\opt.vcxproj
+    cmake ..   -G "%CMAKE_GENERATOR% Win64" -T host=x64 -DWITH_LITE=ON -DLITE_ON_MODEL_OPTIMIZE_TOOL=ON -DWITH_TESTING=OFF -DLITE_BUILD_EXTRA=ON
+    msbuild /m:%cores% /p:Configuration=%BUILD_TYPE% lite\api\opt.vcxproj
 ) else if "%BUILD_PLATFORM%"=="x64" (
     call "%vcvarsall_dir%" amd64
     if "%WITH_OPENCL%"=="ON" (
-        msbuild /maxcpucount:%cores% /p:Configuration=Release lite\opencl_clhpp.vcxproj
+        msbuild /maxcpucount:%cores% /p:Configuration=%BUILD_TYPE% lite\opencl_clhpp.vcxproj
     )
-    msbuild /maxcpucount:%cores% /p:Configuration=Release lite\publish_inference.vcxproj
+    msbuild /maxcpucount:%cores% /p:Configuration=%BUILD_TYPE% lite\publish_inference.vcxproj
 ) else (
     call "%vcvarsall_dir%" x86
     if "%WITH_OPENCL%"=="ON" (
-        msbuild /maxcpucount:%cores% /p:Configuration=Release lite\opencl_clhpp.vcxproj
+        msbuild /maxcpucount:%cores% /p:Configuration=%BUILD_TYPE% lite\opencl_clhpp.vcxproj
     )
-    msbuild /maxcpucount:%cores% /p:Configuration=Release lite\publish_inference.vcxproj
+    msbuild /maxcpucount:%cores% /p:Configuration=%BUILD_TYPE% lite\publish_inference.vcxproj
 )
 goto:eof
 
@@ -200,11 +225,13 @@ goto:eof
             -DLITE_WITH_PROFILE=%WITH_PROFILE% ^
             -DLITE_WITH_PRECISION_PROFILE=%WITH_PRECISION_PROFILE% ^
             -DWITH_LITE=ON ^
-            -DCMAKE_BUILD_TYPE=Release ^
+            -DLITE_WITH_XPU=ON ^
+            -DCMAKE_BUILD_TYPE=%BUILD_TYPE% ^
             -DTHIRD_PARTY_BUILD_TYPE=Release ^
             -DLITE_WITH_LIGHT_WEIGHT_FRAMEWORK=OFF ^
             -DLITE_WITH_ARM=OFF ^
             -DLITE_WITH_OPENCL=%WITH_OPENCL% ^
+            -DLITE_WITH_XTCL=%BUILD_XTCL% ^
             -DLITE_BUILD_EXTRA=%BUILD_EXTRA% ^
             -DLITE_WITH_PYTHON=%WITH_PYTHON% ^
             -DWITH_TESTING=%WITH_TESTING%    ^
@@ -212,6 +239,7 @@ goto:eof
             -DWITH_STATIC_MKL=%WITH_STATIC_MKL%  ^
             -DLITE_BUILD_TAILOR=%WITH_STRIP%  ^
             -DLITE_OPTMODEL_DIR=%OPTMODEL_DIR%  ^
+	    -DXPU_SDK_ROOT=%XPU_SDK_ROOT%  ^
             -DPYTHON_EXECUTABLE="%python_path%"
 
     ninja extern_mklml
@@ -336,6 +364,9 @@ echo "|      with_dynamic_crt: Enable building for MSVC Dynamic Runtime. Default
 echo "|      with_static_mkl: Enable Static linking Intel(R) MKL. Default is Dynamic.                       |"
 echo "|      with_opencl: Enable OpenCL for GPU accelerator. Default OFF.                                   |"
 echo "|      without_avx: Enable AVX or SSE for X86 kernels. Default is ON.                                 |"
+echo "|      use_ninja: Enable ninja build. Default is OFF.                                                 |"
+echo "|      use_vs2017: Enable visual studio 2017 build. Default is OFF.                                   |"
+echo "|      use_vs2019: Enable visual studio 2019 build. Default is OFF.                                   |"
 echo "|  for example:                                                                                       |"
 echo "|      build_windows.bat with_log with_profile with_python with_extra                                 |"
 echo "|      build_windows.bat build_x86 with_strip D:\Paddle-Lite\opt_model_dir                            |"
