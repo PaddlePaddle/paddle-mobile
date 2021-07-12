@@ -38,6 +38,7 @@ void DepthwiseConv<PRECISION(kFloat), PRECISION(kFloat)>::PrepareForRun() {
   auto hin = param.x->dims()[2];
   auto win = param.x->dims()[3];
   auto paddings = *param.paddings;
+  bool ch_four = channel <= 4 * win;
   // select dw conv kernel
   if (kw == 3) {
     bool pads_less = ((paddings[1] < 2) && (paddings[3] < 2));
@@ -62,8 +63,16 @@ void DepthwiseConv<PRECISION(kFloat), PRECISION(kFloat)>::PrepareForRun() {
     KERNEL_FUNC_NAME("conv_depthwise_3x3_fp32")
   } else if (kw == 5) {
     auto strides = param.strides;
-    if ((strides[0] == 1 && strides[1] == 1) ||
+    bool pads_five = (paddings[0] < 5) || (paddings[2] < 5);
+    if (ch_four && pads_five && win >= 2 * kw && hin >= kw &&
         (strides[0] == 2 && strides[1] == 2)) {
+      flag_trans_weights_ = false;
+      impl_ = lite::arm::math::conv_depthwise_5x5_fp32;
+#ifdef LITE_WITH_PROFILE
+      kernel_func_name_ = "conv_depthwise_5x5_fp32";
+#endif
+    } else if ((strides[0] == 1 && strides[1] == 1) ||
+               (strides[0] == 2 && strides[1] == 2)) {
       // trans weights
       constexpr int cblock = 4;
       auto oc = w_dims[0];
