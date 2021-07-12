@@ -137,6 +137,7 @@ function build_opt {
       -DLITE_ON_MODEL_OPTIMIZE_TOOL=ON \
       -DWITH_TESTING=OFF \
       -DLITE_BUILD_EXTRA=ON \
+      -DLITE_WITH_EXCEPTION=ON \
       -DWITH_MKL=OFF
     make opt -j$NUM_PROC
 }
@@ -465,6 +466,7 @@ function make_x86 {
 
   if [ ${BUILD_PYTHON} == "ON" ]; then
     BUILD_EXTRA=ON
+    WITH_EXCEPTION=ON
   fi
 
   if [ -d $build_directory ]
