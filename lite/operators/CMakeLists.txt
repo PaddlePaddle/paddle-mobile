@@ -2,7 +2,7 @@ set(op_DEPS tensor op op_params scope memory)
 
 lite_cc_library(op_params SRCS op_params.cc DEPS tensor any)
 
-# 1.baisc ops used in basic models
+# 1.basic ops used in basic models
 add_operator(conv_op basic SRCS conv_op.cc DEPS ${op_DEPS})
 add_operator(pool_op basic SRCS pool_op.cc DEPS ${op_DEPS})
 add_operator(fc_op basic SRCS fc_op.cc DEPS ${op_DEPS})
@@ -55,9 +55,11 @@ add_operator(instance_norm_op basic SRCS instance_norm_op.cc DEPS ${op_DEPS})
 add_operator(subgraph_op basic SRCS subgraph_op.cc DEPS ${op_DEPS})
 add_operator(grid_sampler_op basic SRCS grid_sampler_op.cc DEPS ${op_DEPS})
 add_operator(flatten_op basic SRCS flatten_op.cc DEPS ${op_DEPS})
+add_operator(write_back_op basic SRCS write_back_op.cc DEPS ${op_DEPS})
+add_operator(lod_array_length_op basic SRCS lod_array_length_op.cc DEPS ${op_DEPS})
+
 add_operator(pow_op extra SRCS pow_op.cc DEPS ${op_DEPS})
 add_operator(sign_op extra SRCS sign_op.cc DEPS ${op_DEPS})
-add_operator(lod_array_length_op basic SRCS lod_array_length_op.cc DEPS ${op_DEPS})
 add_operator(rnn_op extra SRCS rnn_op.cc DEPS ${op_DEPS})
 
 # 2.basic ops not used in basic models
@@ -70,6 +72,7 @@ add_operator(norm_op extra SRCS norm_op.cc DEPS ${op_DEPS})
 
 # 3.extra ops
 add_operator(activation_extra_ops extra SRCS activation_extra_ops.cc DEPS ${op_DEPS})
+add_operator(reduce_extra_ops extra SRCS reduce_extra_ops.cc DEPS ${op_DEPS})
 add_operator(search_group_padding extra SRCS search_group_padding_op.cc DEPS ${op_DEPS})
 add_operator(lrn_op_lite extra SRCS lrn_op.cc DEPS ${op_DEPS})
 add_operator(decode_bboxes_op_lite extra SRCS decode_bboxes_op.cc DEPS ${op_DEPS})
@@ -220,6 +223,10 @@ add_operator(__xpu__generate_sequence_op extra SRCS __xpu__generate_sequence_op.
 add_operator(__xpu__logit_op extra SRCS __xpu__logit_op.cc DEPS ${op_DEPS})
 add_operator(__xpu__squeeze_excitation_op extra SRCS __xpu__squeeze_excitation_op.cc DEPS ${op_DEPS})
 add_operator(__xpu__bigru_op extra SRCS __xpu__bigru_op.cc DEPS ${op_DEPS})
+add_operator(__xpu__conv_pixel_shuffle_fuse_op extra SRCS __xpu__conv_pixel_shuffle_fuse_op.cc DEPS ${op_DEPS})
+
+# Only for FPGA
+add_operator(fpga_conv_op extra SRCS __fpga__conv_op.cc DEPS conv_op ${op_DEPS})
 
 if (NOT LITE_WITH_X86)
     if(NOT LITE_WITH_ARM)

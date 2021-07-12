@@ -97,8 +97,8 @@ echo "|  BUILD_PLATFORM=%BUILD_PLATFORM%                                        
 echo "|  WITH_STATIC_MKL=%WITH_STATIC_MKL%                                                                  |"
 echo "|  MSVC_STATIC_CRT=%MSVC_STATIC_CRT%                                                                  |"
 echo "|  WITH_OPENCL=%WITH_OPENCL%                                                                          |"
-echo "|  BUILD_XTCL=%BUILD_XTCL%                                                                          |"
-echo "|  XPU_SDK_ROOT=%XPU_SDK_ROOT%                                                                          |"
+echo "|  BUILD_XTCL=%BUILD_XTCL%                                                                            |"
+echo "|  XPU_SDK_ROOT=%XPU_SDK_ROOT%                                                                        |"
 echo "|  WITH_AVX=%WITH_AVX%                                                                                |"
 echo "------------------------------------------------------------------------------------------------------|"
 

@@ -103,8 +103,7 @@ bool sgemv(const float *A,
       } else if (act == lite_api::ActivationType::kLeakyRelu) {
         sgemv_leakey_relu(M, N, A, x, y, beta, is_bias, bias, alpha);
       } else {
-        LOG(FATAL)
-            << "sgemv no transA only support relu, relu6, leakey relu fusion";
+        LOG(FATAL) << "sgemv only support relu, relu6, leakey relu fusion";
       }
     } else {
       sgemv(M, N, A, x, y, beta, is_bias, has_a53, bias);
@@ -136,8 +135,11 @@ void sgemv_trans(const int M,
   int valid_block = std::max(4, (N / valid_ths + 3) / 4 * 4);
   valid_ths = (N + valid_block - 1) / valid_block;
   int block_cnt = valid_block / 4;
-  float zero_buf[M];           // NOLINT
-  float y_buf[valid_ths * M];  // NOLINT
+  float *y_buf = new float[valid_ths * M];
+  float *zero_buf = new float[M];
+  float *x_buf = new float[valid_block * valid_ths];
+  memset(x_buf, 0, valid_block * valid_ths * sizeof(float));
+  memcpy(x_buf, x, N * sizeof(float));
   bool has_beta = fabsf(beta) > 1e-8f ? 1 : 0;
   memset(zero_buf, 0, M * sizeof(float));
   if (flag_bias) {
@@ -149,7 +151,7 @@ void sgemv_trans(const int M,
 #pragma omp parallel for
   for (int t = 0; t < valid_ths; ++t) {
     float *block_y = y_buf + t * M;
-    const float *block_x = x + t * valid_block;
+    const float *block_x = x_buf + t * valid_block;
     const float *block_A = A + t * valid_block * M;
     for (int i = 0; i < block_cnt; ++i) {
       float *y_ptr = block_y;
@@ -493,6 +495,9 @@ void sgemv_trans(const int M,
       memcpy(y, y_buf, M * sizeof(float));
     }
   }
+  delete zero_buf;
+  delete y_buf;
+  delete x_buf;
 }
 #else
 void sgemv_trans(const int M,
