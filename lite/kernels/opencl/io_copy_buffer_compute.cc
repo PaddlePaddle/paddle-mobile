@@ -39,7 +39,11 @@ float CopyFromHostSync(void* target, const void* source, size_t size) {
 #ifdef LITE_WITH_PROFILE
   auto h2d_copy_start = GetCurrentUS();
 #endif
-  TargetWrapperCL::MemcpySync(target, source, size, IoDirection::HtoD);
+  TargetWrapperCL::MemcpyAsync(target,
+                               source,
+                               size,
+                               IoDirection::HtoD,
+                               CLRuntime::Global()->command_queue());
 #ifdef LITE_WITH_PROFILE
   auto h2d_duration = (GetCurrentUS() - h2d_copy_start) / 1000.0;
   return h2d_duration;
@@ -53,7 +57,7 @@ float CopyToHostSync(void* target, const void* source, size_t size) {
 #ifdef LITE_WITH_PROFILE
   auto d2h_copy_start = GetCurrentUS();
 #endif
-  CLRuntime::Global()->command_queue().finish();
+  // CLRuntime::Global()->command_queue().finish();
   TargetWrapperCL::MemcpySync(target, source, size, IoDirection::DtoH);
 #ifdef LITE_WITH_PROFILE
   auto d2h_duration = (GetCurrentUS() - d2h_copy_start) / 1000.0;
@@ -69,7 +73,7 @@ float CopyFromDeviceToDeviceSync(void* target,
 #ifdef LITE_WITH_PROFILE
   auto d2h_copy_start = GetCurrentUS();
 #endif
-  CLRuntime::Global()->command_queue().finish();
+  // CLRuntime::Global()->command_queue().finish();
   TargetWrapperCL::MemcpySync(target, source, size, IoDirection::DtoD);
 #ifdef LITE_WITH_PROFILE
   auto d2h_duration = (GetCurrentUS() - d2h_copy_start) / 1000.0;
