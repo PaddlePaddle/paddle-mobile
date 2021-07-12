@@ -128,6 +128,11 @@ class DeviceInfo {
     return reinterpret_cast<T*>(workspace_.mutable_data<int8_t>());
   }
   bool ExtendWorkspace(size_t size);
+  bool CleanWorkspace() {
+    // workspace_.Resize({1});
+    // workspace_.mutable_data<int8_t>();
+    workspace_.clear();
+  }
 
  private:
   int core_num_;
