@@ -35,7 +35,6 @@ void matrix_norm_row(const float* x_data,
                      int feature_size) {
   int cnt = feature_size >> 4;
   int remain = feature_size & 0xf;
-  // #pragma omp parallel for
 
   for (int bi = 0; bi < batch_size; ++bi) {
     int offset = bi * feature_size;
@@ -46,8 +45,7 @@ void matrix_norm_row(const float* x_data,
     // get mean and variance
     float32x4_t mean_v = vdupq_n_f32(0);
     float32x4_t var_v = vdupq_n_f32(0);
-    // #pragma omp parallel for
-    // for (int oi = 0; oi < cnt; ++oi) {
+
     LITE_PARALLEL_BEGIN(oi, tid, cnt) {
       float32x4_t odim1 = vld1q_f32(x_ptr);
       float32x4_t odim2 = vld1q_f32(x_ptr + 4);
