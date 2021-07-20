@@ -16,7 +16,6 @@
 #include <algorithm>
 #include <limits>
 #include <memory>
-#include "lite/core/parallel_defines.h"
 
 namespace paddle {
 namespace lite {
@@ -45,7 +44,8 @@ void pad_ncdhw_constant(const float* din,
   int size_out_hw = out_h * out_w;
   int spatial_size_out = size_out_hw * out_d;
   int spatial_size_in = size_in_hw * in_d;
-  LITE_PARALLEL_BEGIN(i, tid, num) {
+#pragma omp parallel for
+  for (int i = 0; i < num; i++) {
     const float* din_num = din + i * spatial_size_in;
     float* dout_num = dout + i * spatial_size_out;
     for (int d = -pad_front; d < in_d + pad_back; d++) {
@@ -74,7 +74,6 @@ void pad_ncdhw_constant(const float* din,
       }
     }
   }
-  LITE_PARALLEL_END();
 }
 
 void pad_ndhwc_constant(const float* din,
@@ -102,7 +101,8 @@ void pad_ndhwc_constant(const float* din,
   int spatial_size_in = size_in_hw * in_d;
   int pad_leftc = pad_left * c;
   int pad_rightc = pad_right * c;
-  LITE_PARALLEL_BEGIN(i, tid, n) {
+#pragma omp parallel for
+  for (int i = 0; i < n; i++) {
     const float* din_num = din + i * spatial_size_in;
     float* dout_num = dout + i * spatial_size_out;
     for (int d = -pad_front; d < in_d + pad_back; d++) {
@@ -131,7 +131,6 @@ void pad_ndhwc_constant(const float* din,
       }
     }
   }
-  LITE_PARALLEL_END();
 }
 
 void pad_ncdhw_reflect(const float* din,
@@ -155,7 +154,8 @@ void pad_ncdhw_reflect(const float* din,
   int size_out_hw = out_h * out_w;
   int spatial_size_out = size_out_hw * out_d;
   int spatial_size_in = size_in_hw * in_d;
-  LITE_PARALLEL_BEGIN(i, tid, num) {
+#pragma omp parallel for
+  for (int i = 0; i < num; i++) {
     const float* din_num = din + i * spatial_size_in;
     float* dout_num = dout + i * spatial_size_out;
     for (int od = 0; od < out_d; od++) {
@@ -176,7 +176,6 @@ void pad_ncdhw_reflect(const float* din,
       }
     }
   }
-  LITE_PARALLEL_END();
 }
 
 void pad_ndhwc_reflect(const float* din,
@@ -201,7 +200,8 @@ void pad_ndhwc_reflect(const float* din,
   int size_out_hw = out_h * out_wc;
   int spatial_size_out = size_out_hw * out_d;
   int spatial_size_in = size_in_hw * in_d;
-  LITE_PARALLEL_BEGIN(i, tid, n) {
+#pragma omp parallel for
+  for (int i = 0; i < n; i++) {
     const float* din_num = din + i * spatial_size_in;
     float* dout_num = dout + i * spatial_size_out;
     for (int od = 0; od < out_d; od++) {
@@ -225,7 +225,6 @@ void pad_ndhwc_reflect(const float* din,
       }
     }
   }
-  LITE_PARALLEL_END();
 }
 
 void pad_ncdhw_replicate(const float* din,
@@ -249,7 +248,8 @@ void pad_ncdhw_replicate(const float* din,
   int size_out_hw = out_h * out_w;
   int spatial_size_out = size_out_hw * out_d;
   int spatial_size_in = size_in_hw * in_d;
-  LITE_PARALLEL_BEGIN(i, tid, num) {
+#pragma omp parallel for
+  for (int i = 0; i < num; i++) {
     const float* din_num = din + i * spatial_size_in;
     float* dout_num = dout + i * spatial_size_out;
     for (int od = 0; od < out_d; od++) {
@@ -264,7 +264,6 @@ void pad_ncdhw_replicate(const float* din,
       }
     }
   }
-  LITE_PARALLEL_END();
 }
 
 void pad_ndhwc_replicate(const float* din,
@@ -289,7 +288,8 @@ void pad_ndhwc_replicate(const float* din,
   int size_out_hw = out_h * out_wc;
   int spatial_size_out = size_out_hw * out_d;
   int spatial_size_in = size_in_hw * in_d;
-  LITE_PARALLEL_BEGIN(i, tid, n) {
+#pragma omp parallel for
+  for (int i = 0; i < n; i++) {
     const float* din_num = din + i * spatial_size_in;
     float* dout_num = dout + i * spatial_size_out;
     for (int od = 0; od < out_d; od++) {
@@ -307,7 +307,6 @@ void pad_ndhwc_replicate(const float* din,
       }
     }
   }
-  LITE_PARALLEL_END();
 }
 
 void pad_ncdhw_circular(const float* din,
@@ -331,7 +330,8 @@ void pad_ncdhw_circular(const float* din,
   int size_out_hw = out_h * out_w;
   int spatial_size_out = size_out_hw * out_d;
   int spatial_size_in = size_in_hw * in_d;
-  LITE_PARALLEL_BEGIN(i, tid, num) {
+#pragma omp parallel for
+  for (int i = 0; i < num; i++) {
     const float* din_num = din + i * spatial_size_in;
     float* dout_num = dout + i * spatial_size_out;
     for (int od = 0; od < out_d; od++) {
@@ -346,7 +346,6 @@ void pad_ncdhw_circular(const float* din,
       }
     }
   }
-  LITE_PARALLEL_END();
 }
 
 void pad_ndhwc_circular(const float* din,
@@ -371,7 +370,8 @@ void pad_ndhwc_circular(const float* din,
   int size_out_hw = out_h * out_wc;
   int spatial_size_out = size_out_hw * out_d;
   int spatial_size_in = size_in_hw * in_d;
-  LITE_PARALLEL_BEGIN(i, tid, n) {
+#pragma omp parallel for
+  for (int i = 0; i < n; i++) {
     const float* din_num = din + i * spatial_size_in;
     float* dout_num = dout + i * spatial_size_out;
     for (int od = 0; od < out_d; od++) {
@@ -389,7 +389,6 @@ void pad_ndhwc_circular(const float* din,
       }
     }
   }
-  LITE_PARALLEL_END();
 }
 
 void pad3d_ncdhw_func(const lite::Tensor* input,

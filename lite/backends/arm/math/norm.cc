@@ -16,7 +16,6 @@
 #include <arm_neon.h>
 #include <cmath>
 #include "lite/backends/arm/math/funcs.h"
-#include "lite/core/parallel_defines.h"
 #include "lite/utils/cp_logging.h"
 
 namespace paddle {
@@ -35,6 +34,7 @@ void matrix_norm_row(const float* x_data,
                      int feature_size) {
   int cnt = feature_size >> 4;
   int remain = feature_size & 0xf;
+#pragma omp parallel for
 
   for (int bi = 0; bi < batch_size; ++bi) {
     int offset = bi * feature_size;
@@ -45,8 +45,7 @@ void matrix_norm_row(const float* x_data,
     // get mean and variance
     float32x4_t mean_v = vdupq_n_f32(0);
     float32x4_t var_v = vdupq_n_f32(0);
-
-    LITE_PARALLEL_BEGIN(oi, tid, cnt) {
+    for (int oi = 0; oi < cnt; ++oi) {
       float32x4_t odim1 = vld1q_f32(x_ptr);
       float32x4_t odim2 = vld1q_f32(x_ptr + 4);
       float32x4_t odim3 = vld1q_f32(x_ptr + 8);
@@ -64,7 +63,6 @@ void matrix_norm_row(const float* x_data,
 
       x_ptr += 16;
     }
-    LITE_PARALLEL_END();
     mean = vgetq_lane_f32(mean_v, 0) + vgetq_lane_f32(mean_v, 1) +
            vgetq_lane_f32(mean_v, 2) + vgetq_lane_f32(mean_v, 3);
     variance = vgetq_lane_f32(var_v, 0) + vgetq_lane_f32(var_v, 1) +

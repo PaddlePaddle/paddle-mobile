@@ -30,7 +30,7 @@ int ThreadPool::Init(int number) {
   if (nullptr == gInstance) {
     gInstance = new ThreadPool(number);
   }
-  return number;
+  return gInstance->thread_num_;
 }
 void ThreadPool::Destroy() {
   std::lock_guard<std::mutex> _l(gInitMutex);
@@ -48,11 +48,12 @@ ThreadPool::ThreadPool(int number) {
   for (int thread_index = 1; thread_index < thread_num_; ++thread_index) {
     workers_.emplace_back([this, thread_index]() {
       while (!stop_) {
-        if (*tasks_.second[thread_index]) {
-          tasks_.first(thread_index, thread_index);
-          { *tasks_.second[thread_index] = false; }
+        // if (*tasks_.second[thread_index]) {
+        while (!(*tasks_.second[thread_index])) {
+          std::this_thread::yield();
         }
-        std::this_thread::yield();
+        tasks_.first(thread_index, thread_index);
+        *tasks_.second[thread_index] = false;
       }
     });
   }

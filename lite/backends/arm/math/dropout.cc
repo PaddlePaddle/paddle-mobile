@@ -14,7 +14,6 @@
 
 #include "lite/backends/arm/math/dropout.h"
 #include "lite/backends/arm/math/funcs.h"
-#include "lite/core/parallel_defines.h"
 
 namespace paddle {
 namespace lite {
@@ -27,7 +26,8 @@ void dropout_down<float>(const float* din, float* dout, int num, float prob) {
   int cnt = num >> 4;
   int remain = num % 16;
   float32x4_t vscale = vdupq_n_f32(scale);
-  LITE_PARALLEL_BEGIN(i, tid, cnt) {
+#pragma omp parallel for
+  for (int i = 0; i < cnt; i++) {
     const float* din_ptr = din + (i << 4);
     float* dout_ptr = dout + (i << 4);
 
@@ -46,7 +46,6 @@ void dropout_down<float>(const float* din, float* dout, int num, float prob) {
     vst1q_f32(dout_ptr + 8, vmul2);
     vst1q_f32(dout_ptr + 12, vmul3);
   }
-  LITE_PARALLEL_END();
   if (remain > 0) {
     const float* din_ptr = din + (cnt << 4);
     float* dout_ptr = dout + (cnt << 4);
@@ -62,7 +61,8 @@ template <>
 void dropout_up<float>(const float* din, float* dout, int num) {
   int cnt = num >> 4;
   int remain = num % 16;
-  LITE_PARALLEL_BEGIN(i, tid, cnt) {
+#pragma omp parallel for
+  for (int i = 0; i < cnt; i++) {
     const float* din_ptr = din + (i << 4);
     float* dout_ptr = dout + (i << 4);
 
@@ -76,7 +76,6 @@ void dropout_up<float>(const float* din, float* dout, int num) {
     vst1q_f32(dout_ptr + 8, din2);
     vst1q_f32(dout_ptr + 12, din3);
   }
-  LITE_PARALLEL_END();
   if (remain > 0) {
     const float* din_ptr = din + (cnt << 4);
     float* dout_ptr = dout + (cnt << 4);

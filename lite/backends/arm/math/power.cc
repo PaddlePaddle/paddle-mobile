@@ -15,7 +15,6 @@
 #include "lite/backends/arm/math/power.h"
 
 #include "lite/backends/arm/math/funcs.h"
-#include "lite/core/parallel_defines.h"
 
 namespace paddle {
 namespace lite {
@@ -48,7 +47,8 @@ void power<float>(const float* din,
   float32x4_t vscale = vdupq_n_f32(scale_);
   float32x4_t vshift = vdupq_n_f32(shift_);
   float32x4_t vpower = vdupq_n_f32(factor_);
-  LITE_PARALLEL_BEGIN(nums, tid, cnt) {
+#pragma omp parallel for
+  for (int nums = 0; nums < cnt; ++nums) {
     float32x4_t vr0 = vld1q_f32(ptr_in);
     ptr_in += 4;
     float32x4_t vr1 = vld1q_f32(ptr_in);
@@ -84,7 +84,6 @@ void power<float>(const float* din,
     vst1q_f32(ptr_out, vr3);
     ptr_out += 4;
   }
-  LITE_PARALLEL_END();
   for (int j = 0; j < remain; ++j) {
     ptr_out[0] = std::pow((ptr_in[0] * scale_ + shift_), factor_);
     ptr_in++;

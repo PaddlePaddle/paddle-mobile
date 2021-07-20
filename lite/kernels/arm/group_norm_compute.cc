@@ -15,7 +15,6 @@
 #include "lite/kernels/arm/group_norm_compute.h"
 #include "lite/backends/arm/math/funcs.h"
 #include "lite/core/op_registry.h"
-#include "lite/core/parallel_defines.h"
 #include "lite/core/type_system.h"
 
 namespace paddle {
@@ -53,8 +52,9 @@ void GroupNormCompute::Run() {
   int cnt = spatial_size >> 4;
   int remain = spatial_size % 16;
   float* std_vec = new float[param.saved_variance->numel()];
-  // compute saved_mean and saved_variance
-  LITE_PARALLEL_BEGIN(n, tid, ngroup) {
+// compute saved_mean and saved_variance
+#pragma omp parallel for
+  for (int n = 0; n < ngroup; ++n) {
     const float* in_p = in + n * spatial_size;
     float sum_spatial = 0.f;
     float summ_spatial = 0.f;
@@ -114,12 +114,12 @@ void GroupNormCompute::Run() {
     saved_variance[n] = variance;
     std_vec[n] = std;
   }
-  LITE_PARALLEL_END();
   int in_size = height * width;
   cnt = in_size >> 4;
   remain = in_size % 16;
-  // compute Group_norm result: out = scale * (in - mean) / std + bias
-  LITE_PARALLEL_BEGIN(i, tid, ngroup) {
+// compute Group_norm result: out = scale * (in - mean) / std + bias
+#pragma omp parallel for
+  for (int i = 0; i < ngroup; ++i) {
     const float* in_p = in + i * spatial_size;
     float* out_p = out + i * spatial_size;
     int numc = i % groups;
@@ -167,7 +167,6 @@ void GroupNormCompute::Run() {
       }
     }
   }
-  LITE_PARALLEL_END();
   delete[] std_vec;
 }
 
