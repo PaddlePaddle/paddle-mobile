@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include "driver/rockchip_npu/optimizer/unpack_op_fusion.h"
+#include "driver/amlogic_npu/optimizer/unpack_op_fusion.h"
 #include <cmath>
 #include <vector>
 #include "utility/debug.h"
@@ -21,7 +21,7 @@
 #include "utility/utility.h"
 
 namespace nnadapter {
-namespace rockchip_npu {
+namespace amlogic_npu {
 
 static void UnpackConv2D(hal::Model* model, hal::Operation* operation) {
   auto& input_operands = operation->input_operands;
@@ -32,9 +32,19 @@ static void UnpackConv2D(hal::Model* model, hal::Operation* operation) {
   NNADAPTER_CHECK_EQ(output_count, 1);
   auto fuse_code = reinterpret_cast<int32_t*>(input_operands[10]->buffer);
   auto output_operand = output_operands[0];
-  // Unpack RELU6
-  if (*fuse_code == NNADAPTER_FUSED_RELU6) {
-    AddUnaryOperation(model, output_operand, NNADAPTER_RELU6);
+  // Unpack fused activations
+  if (*fuse_code != NNADAPTER_FUSED_NONE) {
+    switch (*fuse_code) {
+      case NNADAPTER_FUSED_RELU:
+        AddUnaryOperation(model, output_operand, NNADAPTER_RELU);
+        break;
+      case NNADAPTER_FUSED_RELU6:
+        AddUnaryOperation(model, output_operand, NNADAPTER_RELU6);
+        break;
+      default:
+        NNADAPTER_LOG(FATAL) << "Unhandled case: fuse_code=" << *fuse_code;
+        break;
+    }
     *fuse_code = NNADAPTER_FUSED_NONE;
   }
 }
@@ -55,5 +65,5 @@ void UnpackOpFusion(hal::Model* model) {
   }
 }
 
-}  // namespace rockchip_npu
+}  // namespace amlogic_npu
 }  // namespace nnadapter
